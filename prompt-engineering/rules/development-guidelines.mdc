@@ -1,0 +1,3048 @@
+---
+description: 
+globs: 
+---
+# SolnAI Development Guidelines
+
+## 📋 Overview
+
+This guide provides comprehensive development standards and workflows for the SolnAI project. These guidelines ensure code quality, consistency, and efficient collaboration across the development team.
+
+## 🔧 Technology Stack Reference
+
+- **Core**: TypeScript ^5.3.0, Node.js ^20.11.0
+- **Frontend**: Next.js ^14.1.0, React ^18.2.0, Tailwind CSS ^3.4.1, shadcn/ui ^0.8.0
+- **State Management**: Zustand ^4.5.0, TanStack Query ^5.24.0
+- **Data Validation**: Zod ^3.22.0
+- **Animation**: Framer Motion ^11.0.0
+- **Backend**: Supabase, Prisma ^5.10.0, tRPC ^10.45.0, Next-Auth ^5.0.0
+- **Development**: pnpm ^8.15.0, ESLint ^8.57.0, Prettier ^3.2.0, Husky ^9.0.0
+- **Testing**: Vitest ^1.3.0, Playwright ^1.42.0
+
+## 🔍 Code Quality Standards
+
+### TypeScript Usage
+
+- Enable strict mode in `tsconfig.json` with `"strict": true`
+- Avoid using `any` type; use proper typing or `unknown` when necessary
+- Utilize discriminated unions for complex type scenarios
+- Define shared interfaces and types in dedicated files
+- Leverage TypeScript's utility types (Pick, Omit, Partial, etc.) for derived types
+
+```typescript
+// Good example
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'user' | 'guest';
+}
+
+// Better example with utility types
+interface BaseUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'user' | 'guest';
+  createdAt: Date;
+  preferences: UserPreferences;
+}
+
+// Creating derived types
+type NewUser = Omit<BaseUser, 'id' | 'createdAt'>;
+type UserSummary = Pick<BaseUser, 'id' | 'name' | 'role'>;
+type PartialUserUpdate = Partial<Omit<BaseUser, 'id'>>;
+
+// Bad example
+interface User {
+  id: any;
+  name: any;
+  role: string; // not specific enough
+}
+```
+
+### Naming Conventions
+
+- **Files**: Use kebab-case for file names (`user-profile.tsx`)
+- **Components**: Use PascalCase for component names (`UserProfile`)
+- **Functions**: Use camelCase for functions and methods (`getUserData`)
+- **Constants**: Use UPPER_SNAKE_CASE for constants (`MAX_RETRY_COUNT`)
+- **Types/Interfaces**: Use PascalCase with descriptive names (`UserProfileProps`)
+- **CSS Classes**: Use kebab-case for CSS class names (`user-avatar`)
+
+### Component Structure
+
+- Place imports in the following order:
+  1. React and framework imports
+  2. Third-party libraries
+  3. Internal components and utilities
+  4. Styles
+- Destructure props at the top of component functions
+- Place hooks at the beginning of the component body
+- Extract complex logic into separate hooks or utilities
+
+```tsx
+// Good component structure
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { fetchUserData } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
+import './styles.css';
+
+interface UserProfileProps {
+  userId: string;
+  showDetails: boolean;
+}
+
+export function UserProfile({ userId, showDetails }: UserProfileProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { data, isLoading } = useQuery(['user', userId], () => fetchUserData(userId));
+
+  useEffect(() => {
+    // Side effect logic here
+  }, [userId]);
+
+  // Component rendering logic
+}
+```
+
+## 🖥️ Next.js 14 Best Practices
+
+### App Router Structure
+
+- Organize routes using the App Router directory structure
+- Group related routes in directories with parentheses (e.g., `(dashboard)`)
+- Use `page.tsx` files to define route UI
+- Implement layouts with `layout.tsx` for shared UI across routes
+
+```
+app/
+├── (auth)/
+│   ├── login/
+│   │   └── page.tsx
+│   ├── register/
+│   │   └── page.tsx
+│   └── layout.tsx
+├── (dashboard)/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── settings/
+│       └── page.tsx
+```
+
+### Server vs. Client Components
+
+- Default to Server Components for improved performance
+- Explicitly mark Client Components with `"use client"` directive
+- Keep client-side components focused on interactivity
+- Use the `server-only` package to enforce server-only imports
+
+```tsx
+// server component (default)
+export default function ProductList({ products }) {
+  return (
+    <ul>
+      {products.map((product) => (
+        <li key={product.id}>{product.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+// client component
+"use client"
+
+import { useState } from 'react';
+
+export default function ProductFilter({ onFilter }) {
+  const [filter, setFilter] = useState('');
+  
+  return (
+    <input 
+      value={filter} 
+      onChange={(e) => {
+        setFilter(e.target.value);
+        onFilter(e.target.value);
+      }} 
+    />
+  );
+}
+```
+
+### Data Fetching Patterns
+
+- Use React Server Components for data fetching when possible
+- Implement route handlers for API endpoints
+- Leverage server actions for form submissions
+- Utilize TanStack Query for client-side data management
+
+```tsx
+// Server Component data fetching
+async function getData() {
+  const res = await fetch('https://api.example.com/data', { 
+    next: { revalidate: 60 } // Revalidate every 60 seconds
+  });
+  
+  if (!res.ok) throw new Error('Failed to fetch data');
+  
+  return res.json();
+}
+
+export default async function Page() {
+  const data = await getData();
+  
+  return <main>{/* Use data */}</main>;
+}
+
+// Client-side data fetching with TanStack Query
+"use client"
+
+import { useQuery } from '@tanstack/react-query';
+
+export function ClientDataComponent() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['data'],
+    queryFn: () => fetch('/api/data').then(res => res.json())
+  });
+  
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading data</div>;
+  
+  return <div>{/* Display data */}</div>;
+}
+```
+
+## 🗂️ State Management
+
+### Zustand Store Pattern
+
+- Create focused stores for specific domains
+- Define typed selectors for state access
+- Implement actions as methods within the store
+- Use middleware as needed (persist, devtools, etc.)
+
+```typescript
+// Store definition
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+interface TodoState {
+  todos: Todo[];
+  filter: 'all' | 'active' | 'completed';
+  // Actions
+  addTodo: (content: string) => void;
+  toggleTodo: (id: string) => void;
+  setFilter: (filter: 'all' | 'active' | 'completed') => void;
+}
+
+export const useTodoStore = create<TodoState>()(
+  persist(
+    (set) => ({
+      todos: [],
+      filter: 'all',
+      
+      addTodo: (content) => set((state) => ({ 
+        todos: [...state.todos, { id: Date.now().toString(), content, completed: false }] 
+      })),
+      
+      toggleTodo: (id) => set((state) => ({
+        todos: state.todos.map(todo => 
+          todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        )
+      })),
+      
+      setFilter: (filter) => set({ filter })
+    }),
+    { name: 'todo-storage' }
+  )
+);
+
+// Using the store in components
+function TodoList() {
+  const todos = useTodoStore(state => state.todos);
+  const filter = useTodoStore(state => state.filter);
+  const toggleTodo = useTodoStore(state => state.toggleTodo);
+  
+  const filteredTodos = todos.filter(todo => {
+    if (filter === 'active') return !todo.completed;
+    if (filter === 'completed') return todo.completed;
+    return true;
+  });
+  
+  return (
+    <ul>
+      {filteredTodos.map(todo => (
+        <li key={todo.id} onClick={() => toggleTodo(todo.id)}>
+          {todo.completed ? '✓ ' : ''}{todo.content}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Server State Management
+
+- Use TanStack Query for remote data management
+- Define query keys consistently with descriptive patterns
+- Implement optimistic updates for improved UX
+- Configure appropriate cache settings
+
+```typescript
+// Query key structure
+const queryKeys = {
+  users: {
+    all: ['users'] as const,
+    lists: () => [...queryKeys.users.all, 'list'] as const,
+    list: (filters: string) => [...queryKeys.users.lists(), { filters }] as const,
+    details: () => [...queryKeys.users.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.users.details(), id] as const,
+  }
+};
+
+// Example usage
+const { data } = useQuery({
+  queryKey: queryKeys.users.detail(userId),
+  queryFn: () => fetchUser(userId)
+});
+
+// Optimistic update example
+const queryClient = useQueryClient();
+
+const mutation = useMutation({
+  mutationFn: updateUser,
+  onMutate: async (newUser) => {
+    // Cancel outgoing refetches
+    await queryClient.cancelQueries({ queryKey: queryKeys.users.detail(newUser.id) });
+    
+    // Snapshot the previous value
+    const previousUser = queryClient.getQueryData(queryKeys.users.detail(newUser.id));
+    
+    // Optimistically update to the new value
+    queryClient.setQueryData(queryKeys.users.detail(newUser.id), newUser);
+    
+    // Return context with the snapshot
+    return { previousUser };
+  },
+  onError: (err, newUser, context) => {
+    // If there was an error, revert to previous value
+    queryClient.setQueryData(
+      queryKeys.users.detail(newUser.id),
+      context?.previousUser
+    );
+  },
+  onSettled: (data, error, variables) => {
+    // Always refetch after error or success
+    queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(variables.id) });
+  },
+});
+```
+
+## 🛠️ Development Workflow
+
+### Feature Implementation Process
+
+1. **Requirements Analysis**
+   - Review feature requirements and acceptance criteria
+   - Identify potential technical challenges
+   - Define scope boundaries
+
+2. **Planning**
+   - Break down the feature into manageable tasks
+   - Identify dependencies and potential blockers
+   - Estimate effort required
+
+3. **Implementation**
+   - Create feature branch from main (`feature/feature-name`)
+   - Implement code following project standards
+   - Write tests for new functionality
+
+4. **Testing**
+   - Run unit and integration tests
+   - Perform manual testing based on acceptance criteria
+   - Verify accessibility and responsive design
+
+5. **Code Review**
+   - Request review from at least one team member
+   - Address feedback and make requested changes
+   - Ensure all tests pass after changes
+
+6. **Merge and Deploy**
+   - Squash commits with descriptive message
+   - Merge to main branch
+   - Verify deployment in staging environment
+
+### Git Workflow
+
+- Use feature branches for all changes (`feature/feature-name`)
+- Write descriptive commit messages in imperative mood
+- Keep commits focused on single logical changes
+- Rebase feature branches on main before creating pull requests
+
+```bash
+# Example Git workflow
+git checkout main
+git pull
+git checkout -b feature/user-authentication
+# Make changes
+git add .
+git commit -m "Implement user authentication flow"
+# More changes
+git add .
+git commit -m "Add password reset functionality"
+# Prepare for PR
+git fetch origin
+git rebase origin/main
+git push origin feature/user-authentication
+```
+
+## 🧪 Testing Guidelines
+
+### Test Framework Setup
+
+- Use Vitest for unit and integration tests
+- Configure Playwright for end-to-end testing
+- Implement testing utilities for common patterns
+
+### Test Coverage Requirements
+
+- **Utilities**: 90% minimum coverage
+- **Components**: 75% minimum coverage
+- **API Routes**: 85% minimum coverage
+
+### Unit Test Structure
+
+```tsx
+// Example Vitest test structure
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { UserProfile } from './UserProfile';
+
+describe('UserProfile', () => {
+  const mockData = {
+    id: '123',
+    name: 'Test User',
+    email: 'test@example.com'
+  };
+
+  beforeEach(() => {
+    // Setup code here
+  });
+
+  it('renders user information correctly', () => {
+    render(<UserProfile user={mockData} />);
+    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(screen.getByText('test@example.com')).toBeInTheDocument();
+  });
+
+  it('handles edit button click', () => {
+    const handleEdit = vi.fn();
+    render(<UserProfile user={mockData} onEdit={handleEdit} />);
+    fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+    expect(handleEdit).toHaveBeenCalledWith('123');
+  });
+});
+```
+
+### E2E Testing with Playwright
+
+```typescript
+// Example Playwright test
+import { test, expect } from '@playwright/test';
+
+test.describe('User Profile Page', () => {
+  test.beforeEach(async ({ page }) => {
+    // Setup: login, navigate to profile page, etc.
+    await page.goto('/login');
+    await page.fill('[data-testid="email-input"]', 'test@example.com');
+    await page.fill('[data-testid="password-input"]', 'password123');
+    await page.click('[data-testid="login-button"]');
+    await page.waitForURL('/dashboard');
+  });
+
+  test('should display user information correctly', async ({ page }) => {
+    await page.goto('/profile');
+    await expect(page.locator('h1')).toHaveText('Test User');
+    await expect(page.locator('[data-testid="user-email"]')).toHaveText('test@example.com');
+  });
+
+  test('should update profile information successfully', async ({ page }) => {
+    await page.goto('/profile/edit');
+    await page.fill('[data-testid="name-input"]', 'Updated Name');
+    await page.click('[data-testid="save-button"]');
+    await expect(page.locator('.success-message')).toBeVisible();
+    await page.goto('/profile');
+    await expect(page.locator('h1')).toHaveText('Updated Name');
+  });
+});
+```
+
+### Integration Test Best Practices
+
+- Test component interactions rather than implementation details
+- Use mock service workers (MSW) for API mocking
+- Test error states and edge cases
+- Verify accessibility in integration tests
+
+## 🚀 Performance Optimization
+
+### Component Optimization
+
+- Use React.memo for components that render often but rarely change
+- Implement useMemo for expensive calculations
+- Use useCallback for event handlers passed to child components
+- Avoid unnecessary re-renders with proper dependency arrays
+
+```tsx
+// Example of optimized component
+import { memo, useMemo, useCallback } from 'react';
+
+interface DataTableProps {
+  data: Record<string, any>[];
+  onRowClick: (id: string) => void;
+}
+
+export const DataTable = memo(function DataTable({ data, onRowClick }: DataTableProps) {
+  const sortedData = useMemo(() => {
+    return [...data].sort((a, b) => a.name.localeCompare(b.name));
+  }, [data]);
+
+  const handleRowClick = useCallback((id: string) => {
+    onRowClick(id);
+  }, [onRowClick]);
+
+  return (
+    <table>
+      {/* Table implementation */}
+    </table>
+  );
+});
+```
+
+### Next.js Optimization Techniques
+
+- Use Image component for optimized images
+- Implement proper loading strategies (eager/lazy)
+- Configure suspense boundaries for streaming
+- Utilize route groups for code organization without affecting URL structure
+- Implement route segment config options:
+  - `dynamicParams` for controlling dynamic segment behavior
+  - `revalidate` for setting revalidation intervals
+  - `fetchCache` for customizing fetch request caching
+
+```tsx
+// Example of Next.js optimization
+import Image from 'next/image';
+import { Suspense } from 'react';
+import Loading from './loading';
+
+// Route segment config
+export const dynamic = 'force-dynamic'; // or 'auto', 'force-static', etc.
+export const revalidate = 60; // Revalidate every 60 seconds
+export const fetchCache = 'force-cache'; // or 'default-cache', 'only-if-cached', etc.
+
+// Optimized page component
+export default function ProductPage({ params }: { params: { id: string } }) {
+  return (
+    <div>
+      <h1>Product {params.id}</h1>
+      
+      {/* Optimized image */}
+      <Image 
+        src={`/products/${params.id}.jpg`}
+        width={500}
+        height={300}
+        alt="Product image"
+        priority={true} // Load with priority
+        quality={80} // 80% quality
+      />
+      
+      {/* Suspense boundary */}
+      <Suspense fallback={<Loading />}>
+        <ProductDetails id={params.id} />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+### Data Fetching Optimization
+
+- Implement TanStack Query for efficient data fetching and caching
+- Use appropriate staleTime and cacheTime values
+- Implement optimistic updates for better UX
+- Use prefetching for anticipated data needs
+
+## 🔒 Security Best Practices
+
+### Input Validation
+
+- Validate all user inputs on both client and server
+- Use Zod for schema validation
+- Implement proper error handling for validation failures
+
+```tsx
+// Example of input validation with Zod
+import { z } from 'zod';
+
+const UserSchema = z.object({
+  name: z.string().min(2).max(50),
+  email: z.string().email(),
+  age: z.number().int().positive().optional()
+});
+
+type User = z.infer<typeof UserSchema>;
+
+function validateUserData(data: unknown): User {
+  return UserSchema.parse(data);
+}
+```
+
+### Authentication Security
+
+- Implement proper CSRF protection
+- Use secure cookies with HttpOnly and SameSite attributes
+- Implement proper token refresh mechanisms
+- Never store sensitive information in localStorage
+
+### API Security
+
+- Implement rate limiting on API routes
+- Use proper error handling to avoid leaking implementation details
+- Validate and sanitize all API inputs
+- Implement proper authorization checks on all protected routes
+
+## ♿ Accessibility Requirements
+
+### Minimum Requirements
+
+- All interactive elements must be keyboard accessible
+- Proper semantic HTML structure
+- ARIA attributes where appropriate
+- Color contrast that meets WCAG 2.1 AA standards (4.5:1)
+- Screen reader compatibility
+
+### Testing Accessibility
+
+- Use axe-core for automated accessibility testing
+- Perform manual keyboard navigation testing
+- Test with screen readers (NVDA, VoiceOver)
+- Verify focus management in dynamic interfaces
+
+## 📱 Responsive Design Guidelines
+
+- Implement mobile-first approach
+- Use Tailwind's responsive modifiers consistently
+- Test on standard breakpoints:
+  - Mobile: 375px - 639px
+  - Tablet: 640px - 1023px
+  - Desktop: 1024px and above
+- Ensure touch targets are at least 44x44 pixels on mobile
+
+## 📚 Documentation Standards
+
+- Use JSDoc comments for functions and components
+- Document complex algorithms with clear explanations
+- Keep README files updated with setup and usage instructions
+- Document known limitations and edge cases
+
+```tsx
+/**
+ * Formats a date according to the user's locale preferences
+ * @param date - The date to format
+ * @param format - Optional format string (defaults to 'medium')
+ * @returns The formatted date string
+ * @example
+ * formatDate(new Date(), 'short') // '1/1/2023'
+ */
+export function formatDate(date: Date, format: 'short' | 'medium' | 'long' = 'medium'): string {
+  // Implementation
+}
+```
+
+## 🐛 Debugging and Troubleshooting
+
+### Common Issues
+
+| Issue | Possible Cause | Solution |
+|-------|----------------|----------|
+| Hydration errors | Mismatch between server and client rendering | Ensure consistent rendering between server/client |
+| Type errors | Incorrect type definitions | Verify types and interfaces match implementation |
+| API errors | Network issues or invalid data | Check network tab and validate request/response |
+| React Query issues | Improper query invalidation | Review queryKey structure and invalidation calls |
+| Server component errors | Using client hooks in server components | Move component logic to client components |
+
+### Debugging Tools
+
+- Use React DevTools for component inspection
+- Leverage browser DevTools for network and performance analysis
+- Use TypeScript's `--strictNullChecks` to catch potential null/undefined issues
+- Implement proper error boundaries with fallback UIs
+- Utilize Next.js built-in error and notFound pages
+
+## 🛂 Code Review Checklist
+
+Before submitting code for review, ensure:
+
+- [ ] Code follows project style guidelines
+- [ ] All tests pass locally
+- [ ] New functionality has appropriate test coverage
+- [ ] No console errors or warnings
+- [ ] Responsive behavior verified on multiple viewports
+- [ ] Accessibility requirements met
+- [ ] Performance impact considered
+- [ ] Security implications reviewed
+- [ ] Documentation updated as needed
+- [ ] Components properly split between server and client
+- [ ] Proper error handling implemented
+
+## 📊 Metrics and Monitoring
+
+### Performance Metrics
+
+- First Contentful Paint (FCP) < 1.8s
+- Largest Contentful Paint (LCP) < 2.5s
+- First Input Delay (FID) < 100ms
+- Cumulative Layout Shift (CLS) < 0.1
+- Interaction to Next Paint (INP) < 200ms
+
+### Error Monitoring
+
+- Implement error logging for client and server errors
+- Monitor API failure rates
+- Track performance regressions
+
+## 📅 Release Process
+
+1. **Preparation**
+   - Verify all tests pass in CI/CD pipeline
+   - Create release branch (`release/v1.2.3`)
+   - Update version number and changelog
+
+2. **Testing**
+   - Deploy to staging environment
+   - Perform smoke testing
+   - Verify critical user journeys
+
+3. **Release**
+   - Merge release branch to main
+   - Create version tag
+   - Deploy to production
+
+4. **Post-Release**
+   - Monitor error rates and performance
+   - Address any critical issues
+   - Conduct retrospective 
+
+## 🤖 AI Integration Guidelines
+
+### Model Integration Patterns
+
+- Implement a consistent interface for AI model interactions
+- Create typed request/response schemas for all AI operations
+- Implement proper error handling for model failures
+- Cache model responses when appropriate to reduce API costs
+- Provide fallback behavior when AI services are unavailable
+
+```typescript
+// Example AI service interface
+import { z } from 'zod';
+
+// Define schemas for request and response
+const CompletionRequestSchema = z.object({
+  prompt: z.string().min(1),
+  maxTokens: z.number().int().positive().default(100),
+  temperature: z.number().min(0).max(1).default(0.7),
+  model: z.enum(['gpt-4', 'claude-3']).default('claude-3'),
+});
+
+const CompletionResponseSchema = z.object({
+  text: z.string(),
+  usage: z.object({
+    promptTokens: z.number().int(),
+    completionTokens: z.number().int(),
+    totalTokens: z.number().int(),
+  }),
+});
+
+// Type inference
+type CompletionRequest = z.infer<typeof CompletionRequestSchema>;
+type CompletionResponse = z.infer<typeof CompletionResponseSchema>;
+
+// AI service with error handling and caching
+export class AIService {
+  private cache = new Map<string, CompletionResponse>();
+  
+  async generateCompletion(request: CompletionRequest): Promise<CompletionResponse> {
+    try {
+      // Generate cache key
+      const cacheKey = JSON.stringify(request);
+      
+      // Check cache first
+      if (this.cache.has(cacheKey)) {
+        return this.cache.get(cacheKey)!;
+      }
+      
+      // Validate request
+      CompletionRequestSchema.parse(request);
+      
+      // Call AI API
+      const response = await fetch('https://api.solnai.com/completion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`AI API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Validate response
+      const validatedResponse = CompletionResponseSchema.parse(data);
+      
+      // Cache response
+      this.cache.set(cacheKey, validatedResponse);
+      
+      return validatedResponse;
+    } catch (error) {
+      console.error('AI completion error:', error);
+      
+      // Implement fallback behavior
+      if (error instanceof Error) {
+        // Log specific error for monitoring
+        captureException(error);
+      }
+      
+      // Return fallback response or rethrow
+      throw new AIServiceError('Failed to generate completion', { cause: error });
+    }
+  }
+}
+
+// Custom error class for AI service errors
+class AIServiceError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = 'AIServiceError';
+  }
+}
+```
+
+### Prompt Engineering Standards
+
+- Structure prompts consistently with clear templates
+- Include version control for prompts
+- Document expected output formats
+- Implement prompt validation before sending to AI models
+- Store prompts in a centralized location for easy updates
+
+```typescript
+// Example prompt management system
+import { z } from 'zod';
+
+// Prompt template with typed parameters
+interface PromptTemplate<T extends z.ZodType> {
+  id: string;
+  version: string;
+  template: string;
+  schema: T;
+  examples: Array<{
+    parameters: z.infer<T>;
+    expectedOutput: string;
+  }>;
+}
+
+// Example prompt template
+const summarizationPrompt: PromptTemplate<typeof SummarizationParamsSchema> = {
+  id: 'text-summarization',
+  version: '1.0.0',
+  template: `Summarize the following text in {{length}} sentences:
+  
+{{text}}
+
+Summary:`,
+  schema: SummarizationParamsSchema,
+  examples: [
+    {
+      parameters: {
+        text: "The quick brown fox jumps over the lazy dog. This sentence is used to test typing skills as it contains all letters of the alphabet. It originated in the 1800s as a typing exercise.",
+        length: 1
+      },
+      expectedOutput: "The sentence 'The quick brown fox jumps over the lazy dog' contains all letters of the alphabet and has been used since the 1800s as a typing exercise."
+    }
+  ]
+};
+
+// Prompt renderer with parameter validation
+function renderPrompt<T extends z.ZodType>(
+  template: PromptTemplate<T>,
+  parameters: z.infer<T>
+): string {
+  // Validate parameters against schema
+  template.schema.parse(parameters);
+  
+  // Render template with parameters
+  let result = template.template;
+  
+  for (const [key, value] of Object.entries(parameters)) {
+    result = result.replace(new RegExp(`{{${key}}}`, 'g'), String(value));
+  }
+  
+  return result;
+}
+```
+
+### AI Response Processing
+
+- Validate AI responses against expected schemas
+- Handle hallucinations and unexpected outputs gracefully
+- Implement content filtering for user-facing AI outputs
+- Log unusual or problematic responses for review
+- Implement retry mechanisms with exponential backoff
+
+```typescript
+// Example AI response processor
+import { z } from 'zod';
+
+// Expected response schema
+const ProductDescriptionSchema = z.object({
+  title: z.string().min(5).max(100),
+  description: z.string().min(50).max(500),
+  features: z.array(z.string()).min(3).max(10),
+  targetAudience: z.string().optional(),
+});
+
+type ProductDescription = z.infer<typeof ProductDescriptionSchema>;
+
+// Process and validate AI-generated product descriptions
+async function processProductDescription(rawResponse: unknown): Promise<ProductDescription> {
+  try {
+    // Try to parse as JSON first
+    let jsonData: unknown;
+    
+    if (typeof rawResponse === 'string') {
+      try {
+        jsonData = JSON.parse(rawResponse);
+      } catch (e) {
+        // If not valid JSON, try to extract JSON from text
+        const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          jsonData = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('Could not extract valid JSON from response');
+        }
+      }
+    } else {
+      jsonData = rawResponse;
+    }
+    
+    // Validate against schema
+    const validatedData = ProductDescriptionSchema.safeParse(jsonData);
+    
+    if (!validatedData.success) {
+      // Log validation errors
+      console.error('AI response validation failed:', validatedData.error);
+      
+      // Attempt to fix common issues
+      const partialData = extractPartialData(rawResponse);
+      
+      // Validate the fixed data
+      return ProductDescriptionSchema.parse(partialData);
+    }
+    
+    return validatedData.data;
+  } catch (error) {
+    console.error('Failed to process AI response:', error);
+    throw new Error('Invalid AI response format');
+  }
+}
+
+// Helper to extract partial data from malformed responses
+function extractPartialData(response: unknown): Partial<ProductDescription> {
+  // Implementation to extract structured data from unstructured response
+  // This would contain heuristics to identify parts of the response
+  // ...
+}
+```
+
+### AI Feature Testing
+
+- Create specific test suites for AI-powered features
+- Test with a variety of inputs including edge cases
+- Mock AI responses for consistent test results
+- Verify fallback behavior works correctly
+- Test performance and response times
+
+```typescript
+// Example AI feature test
+import { describe, it, expect, vi } from 'vitest';
+import { AIService } from './ai-service';
+
+// Mock fetch for testing
+vi.mock('global.fetch', () => ({
+  default: vi.fn()
+}));
+
+describe('AIService', () => {
+  let aiService: AIService;
+  
+  beforeEach(() => {
+    aiService = new AIService();
+    vi.clearAllMocks();
+  });
+  
+  it('should generate completion successfully', async () => {
+    // Mock successful response
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        text: 'Generated completion',
+        usage: {
+          promptTokens: 10,
+          completionTokens: 20,
+          totalTokens: 30
+        }
+      })
+    });
+    
+    const result = await aiService.generateCompletion({
+      prompt: 'Test prompt',
+      maxTokens: 100
+    });
+    
+    expect(result.text).toBe('Generated completion');
+    expect(result.usage.totalTokens).toBe(30);
+  });
+  
+  it('should handle API errors gracefully', async () => {
+    // Mock failed response
+    global.fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      statusText: 'Too Many Requests'
+    });
+    
+    await expect(aiService.generateCompletion({
+      prompt: 'Test prompt'
+    })).rejects.toThrow('AI API error: 429');
+  });
+  
+  it('should use cached responses when available', async () => {
+    // Mock successful response for first call
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        text: 'Cached response',
+        usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 }
+      })
+    });
+    
+    const request = { prompt: 'Cache test', maxTokens: 50 };
+    
+    // First call should use the API
+    await aiService.generateCompletion(request);
+    
+    // Second call with same parameters should use cache
+    const result = await aiService.generateCompletion(request);
+    
+    expect(result.text).toBe('Cached response');
+    expect(global.fetch).toHaveBeenCalledTimes(1); // Only called once
+  });
+});
+```
+
+## 🌐 Internationalization (i18n)
+
+### Implementation Strategy
+
+- Use Next.js built-in i18n routing or next-intl for more advanced features
+- Implement locale detection and selection with proper fallbacks
+- Store translations in structured JSON files by language code
+- Support right-to-left (RTL) languages when needed
+
+```typescript
+// next.config.js with i18n configuration
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  i18n: {
+    // Supported locales
+    locales: ['en', 'fr', 'es', 'de', 'ja', 'ar'],
+    // Default locale
+    defaultLocale: 'en',
+    // Automatic locale detection
+    localeDetection: true,
+    // Domain-specific locales (optional)
+    domains: [
+      {
+        domain: 'example.com',
+        defaultLocale: 'en',
+      },
+      {
+        domain: 'example.fr',
+        defaultLocale: 'fr',
+      },
+    ],
+  },
+};
+
+module.exports = nextConfig;
+```
+
+### Translation Management
+
+- Implement a clear process for adding new translations
+- Use TypeScript for type-safe translation keys
+- Consider implementing a translation management system
+- Document string interpolation patterns
+
+```typescript
+// Type-safe translations with next-intl
+import { createTranslator } from 'next-intl';
+
+// Define translation schema
+type Messages = {
+  common: {
+    welcome: string;
+    goodbye: string;
+  };
+  auth: {
+    login: string;
+    register: string;
+    forgotPassword: string;
+  };
+  errors: {
+    notFound: string;
+    serverError: string;
+    validation: {
+      required: string;
+      email: string;
+      minLength: string;
+    };
+  };
+};
+
+// Example translation file (en.json)
+const enMessages: Messages = {
+  common: {
+    welcome: 'Welcome to SolnAI',
+    goodbye: 'Thank you for using SolnAI',
+  },
+  auth: {
+    login: 'Log in',
+    register: 'Create an account',
+    forgotPassword: 'Forgot password?',
+  },
+  errors: {
+    notFound: 'Page not found',
+    serverError: 'Server error occurred',
+    validation: {
+      required: '{field} is required',
+      email: 'Please enter a valid email address',
+      minLength: '{field} must be at least {length} characters',
+    },
+  },
+};
+
+// Type-safe translation function
+function getTranslations(locale: string): Messages {
+  // In a real app, this would load from a CDN or API
+  const translations: Record<string, Messages> = {
+    en: enMessages,
+    // Other languages...
+  };
+  
+  return translations[locale] || translations['en']; // Fallback to English
+}
+
+// Usage in a component
+function MyComponent({ locale }: { locale: string }) {
+  const messages = getTranslations(locale);
+  const t = createTranslator({ locale, messages });
+  
+  return (
+    <div>
+      <h1>{t('common.welcome')}</h1>
+      <p>{t('errors.validation.minLength', { 
+        field: 'Password', 
+        length: 8 
+      })}</p>
+    </div>
+  );
+}
+```
+
+### Date, Time, and Number Formatting
+
+- Use Intl API for locale-aware formatting
+- Consider timezone handling in date displays
+- Format currency values appropriately by locale
+- Implement proper pluralization rules
+
+```typescript
+// Utility functions for internationalized formatting
+import { useLocale } from 'next-intl';
+
+// Date formatting
+export function formatDate(date: Date, options?: Intl.DateTimeFormatOptions): string {
+  const locale = useLocale();
+  
+  const formatter = new Intl.DateTimeFormat(locale, {
+    dateStyle: 'medium',
+    ...options,
+  });
+  
+  return formatter.format(date);
+}
+
+// Number formatting
+export function formatNumber(
+  value: number, 
+  options?: Intl.NumberFormatOptions
+): string {
+  const locale = useLocale();
+  
+  const formatter = new Intl.NumberFormat(locale, options);
+  
+  return formatter.format(value);
+}
+
+// Currency formatting
+export function formatCurrency(
+  value: number, 
+  currency: string = 'USD'
+): string {
+  const locale = useLocale();
+  
+  const formatter = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    currencyDisplay: 'symbol',
+  });
+  
+  return formatter.format(value);
+}
+
+// Relative time formatting
+export function formatRelativeTime(date: Date): string {
+  const locale = useLocale();
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  // Choose appropriate unit
+  let unit: Intl.RelativeTimeFormatUnit = 'second';
+  let value = diffInSeconds;
+  
+  if (Math.abs(diffInSeconds) >= 60) {
+    unit = 'minute';
+    value = Math.floor(diffInSeconds / 60);
+    
+    if (Math.abs(value) >= 60) {
+      unit = 'hour';
+      value = Math.floor(value / 60);
+      
+      if (Math.abs(value) >= 24) {
+        unit = 'day';
+        value = Math.floor(value / 24);
+        
+        if (Math.abs(value) >= 30) {
+          unit = 'month';
+          value = Math.floor(value / 30);
+          
+          if (Math.abs(value) >= 12) {
+            unit = 'year';
+            value = Math.floor(value / 12);
+          }
+        }
+      }
+    }
+  }
+  
+  const formatter = new Intl.RelativeTimeFormat(locale, { 
+    numeric: 'auto' 
+  });
+  
+  return formatter.format(-value, unit);
+}
+```
+
+### RTL Support
+
+- Configure proper RTL support in Tailwind CSS
+- Use logical properties instead of directional ones (e.g., `margin-inline-start` vs `margin-left`)
+- Test UI layouts in both LTR and RTL modes
+- Ensure text alignment and directional icons adapt correctly
+
+```typescript
+// tailwind.config.js with RTL support
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  theme: {
+    extend: {
+      // ...other theme extensions
+    },
+  },
+  plugins: [
+    require('tailwindcss-rtl'), // Add RTL support plugin
+  ],
+};
+
+// Component with RTL support
+function Button({ children, icon, iconPosition = 'start' }) {
+  const locale = useLocale();
+  const isRTL = locale === 'ar' || locale === 'he';
+  
+  // Adjust icon position for RTL languages
+  const adjustedIconPosition = isRTL 
+    ? (iconPosition === 'start' ? 'end' : 'start')
+    : iconPosition;
+  
+  return (
+    <button className="flex items-center px-4 py-2 bg-blue-500 text-white rounded">
+      {adjustedIconPosition === 'start' && (
+        <span className="me-2">{icon}</span>
+      )}
+      <span>{children}</span>
+      {adjustedIconPosition === 'end' && (
+        <span className="ms-2">{icon}</span>
+      )}
+    </button>
+  );
+}
+```
+
+### Translation Workflow
+
+1. **Extract**: Identify translatable strings in the codebase
+2. **Translate**: Provide translations for each supported locale
+3. **Integrate**: Import translations into the application
+4. **Verify**: Test the application in each supported locale
+5. **Maintain**: Update translations when source strings change
+
+```typescript
+// Example translation workflow with typed keys
+import { z } from 'zod';
+
+// Define translation schema
+const TranslationSchema = z.object({
+  common: z.object({
+    welcome: z.string(),
+    goodbye: z.string(),
+    // ...other common strings
+  }),
+  features: z.object({
+    dashboard: z.object({
+      title: z.string(),
+      summary: z.string(),
+      // ...other dashboard strings
+    }),
+    // ...other feature sections
+  }),
+  // ...other sections
+});
+
+// Type inference
+type TranslationKeys = z.infer<typeof TranslationSchema>;
+
+// Translation loader
+async function loadTranslations(locale: string): Promise<TranslationKeys> {
+  try {
+    // In production, this would load from a CDN or API
+    const translations = await import(`@/translations/${locale}.json`);
+    
+    // Validate translations against schema
+    return TranslationSchema.parse(translations);
+  } catch (error) {
+    console.error(`Failed to load translations for ${locale}:`, error);
+    
+    // Fallback to English
+    const fallback = await import('@/translations/en.json');
+    return TranslationSchema.parse(fallback);
+  }
+}
+```
+
+## 🔄 CI/CD Workflows
+
+### Pipeline Structure
+
+- Implement a multi-stage CI/CD pipeline with GitHub Actions
+- Ensure proper separation of development, staging, and production environments
+- Automate testing, building, and deployment processes
+- Implement quality gates at each stage of the pipeline
+
+```yaml
+# .github/workflows/main.yml
+name: SolnAI CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.15.0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Type check
+        run: pnpm type-check
+
+  test:
+    name: Test
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.15.0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run unit tests
+        run: pnpm test:unit
+      - name: Run integration tests
+        run: pnpm test:integration
+      - name: Upload test coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: coverage/
+
+  build:
+    name: Build
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.15.0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build application
+        run: pnpm build
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: .next/
+
+  deploy-staging:
+    name: Deploy to Staging
+    if: github.ref == 'refs/heads/develop'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.solnai.com
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: build
+          path: .next/
+      - name: Deploy to Vercel (Staging)
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          alias-domains: |
+            staging.solnai.com
+
+  e2e-tests:
+    name: E2E Tests
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.15.0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+      - name: Run E2E tests against staging
+        run: pnpm test:e2e
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: https://staging.solnai.com
+
+  deploy-production:
+    name: Deploy to Production
+    if: github.ref == 'refs/heads/main'
+    needs: [build, e2e-tests]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://solnai.com
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: build
+          path: .next/
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          alias-domains: |
+            solnai.com
+            www.solnai.com
+```
+
+### Environment Configuration
+
+- Use environment variables for configuration
+- Implement a secure method for managing secrets
+- Create separate environment configurations for development, staging, and production
+- Document required environment variables
+
+```typescript
+// Environment configuration types
+type EnvironmentConfig = {
+  // API endpoints
+  API_URL: string;
+  AI_MODEL_ENDPOINT: string;
+  
+  // Authentication
+  AUTH_SECRET: string;
+  NEXTAUTH_URL: string;
+  
+  // Database
+  DATABASE_URL: string;
+  
+  // External services
+  SUPABASE_URL: string;
+  SUPABASE_KEY: string;
+  
+  // Feature flags
+  ENABLE_EXPERIMENTAL_FEATURES: boolean;
+  
+  // Analytics
+  ANALYTICS_ID: string;
+  
+  // Deployment
+  VERCEL_URL?: string;
+  VERCEL_ENV?: 'production' | 'preview' | 'development';
+};
+
+// Environment-specific configuration validation
+import { z } from 'zod';
+
+const envSchema = z.object({
+  // Required in all environments
+  NODE_ENV: z.enum(['development', 'test', 'production']),
+  API_URL: z.string().url(),
+  DATABASE_URL: z.string(),
+  
+  // Optional with defaults
+  ENABLE_EXPERIMENTAL_FEATURES: z.preprocess(
+    (val) => val === 'true',
+    z.boolean().default(false)
+  ),
+  
+  // Required in production only
+  ...process.env.NODE_ENV === 'production'
+    ? {
+        AUTH_SECRET: z.string().min(32),
+        ANALYTICS_ID: z.string(),
+      }
+    : {
+        AUTH_SECRET: z.string().optional(),
+        ANALYTICS_ID: z.string().optional(),
+      },
+});
+
+// Validate environment variables
+const env = envSchema.parse(process.env);
+
+// Usage
+export const config = {
+  apiUrl: env.API_URL,
+  isDevelopment: env.NODE_ENV === 'development',
+  isProduction: env.NODE_ENV === 'production',
+  enableExperimentalFeatures: env.ENABLE_EXPERIMENTAL_FEATURES,
+  // ...other config values
+};
+```
+
+### Deployment Strategy
+
+- Implement a blue-green deployment strategy for zero-downtime updates
+- Use feature flags to control the rollout of new features
+- Implement canary releases for high-risk changes
+- Configure automatic rollbacks for failed deployments
+
+```typescript
+// Feature flag implementation
+import { createStore } from 'zustand';
+
+type FeatureFlags = {
+  enableNewDashboard: boolean;
+  enableAIAssistant: boolean;
+  enableBetaFeatures: boolean;
+  // Add more feature flags as needed
+};
+
+type FeatureFlagStore = {
+  flags: FeatureFlags;
+  isEnabled: (flag: keyof FeatureFlags) => boolean;
+  setFlag: (flag: keyof FeatureFlags, value: boolean) => void;
+  fetchFlags: () => Promise<void>;
+};
+
+// Feature flag store
+export const useFeatureFlags = createStore<FeatureFlagStore>((set, get) => ({
+  flags: {
+    enableNewDashboard: false,
+    enableAIAssistant: false,
+    enableBetaFeatures: false,
+  },
+  
+  isEnabled: (flag) => get().flags[flag],
+  
+  setFlag: (flag, value) => set((state) => ({
+    flags: {
+      ...state.flags,
+      [flag]: value,
+    },
+  })),
+  
+  fetchFlags: async () => {
+    try {
+      // Fetch flags from API or config service
+      const response = await fetch('/api/feature-flags');
+      const flags = await response.json();
+      
+      set({ flags });
+    } catch (error) {
+      console.error('Failed to fetch feature flags:', error);
+      // Keep default values on error
+    }
+  },
+}));
+
+// Usage in components
+function Dashboard() {
+  const isNewDashboardEnabled = useFeatureFlags((state) => 
+    state.isEnabled('enableNewDashboard')
+  );
+  
+  return isNewDashboardEnabled ? <NewDashboard /> : <LegacyDashboard />;
+}
+```
+
+### Monitoring and Alerting
+
+- Implement application performance monitoring (APM)
+- Set up error tracking and reporting
+- Configure alerts for critical issues
+- Implement logging for debugging and auditing
+
+```typescript
+// Error monitoring setup
+import * as Sentry from '@sentry/nextjs';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.NODE_ENV,
+  release: process.env.VERCEL_GIT_COMMIT_SHA,
+  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  integrations: [
+    new Sentry.BrowserTracing({
+      tracePropagationTargets: ['localhost', 'solnai.com'],
+    }),
+  ],
+});
+
+// Custom error boundary component
+import { ErrorBoundary } from '@sentry/nextjs';
+
+function MyApp({ Component, pageProps }) {
+  return (
+    <ErrorBoundary fallback={({ error }) => (
+      <ErrorFallback error={error} />
+    )}>
+      <Component {...pageProps} />
+    </ErrorBoundary>
+  );
+}
+
+// Structured logging
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface LogEntry {
+  level: LogLevel;
+  message: string;
+  timestamp: string;
+  context?: Record<string, unknown>;
+  userId?: string;
+  requestId?: string;
+}
+
+function createLogger(component: string) {
+  return {
+    debug: (message: string, context?: Record<string, unknown>) => 
+      log('debug', message, { component, ...context }),
+    info: (message: string, context?: Record<string, unknown>) => 
+      log('info', message, { component, ...context }),
+    warn: (message: string, context?: Record<string, unknown>) => 
+      log('warn', message, { component, ...context }),
+    error: (message: string, error?: Error, context?: Record<string, unknown>) => 
+      log('error', message, { 
+        component, 
+        error: error ? { 
+          message: error.message, 
+          stack: error.stack,
+          name: error.name,
+        } : undefined,
+        ...context,
+      }),
+  };
+}
+
+function log(level: LogLevel, message: string, context?: Record<string, unknown>) {
+  const entry: LogEntry = {
+    level,
+    message,
+    timestamp: new Date().toISOString(),
+    context,
+    // Add request ID and user ID if available
+    requestId: getRequestId(),
+    userId: getUserId(),
+  };
+  
+  // In development, log to console
+  if (process.env.NODE_ENV === 'development') {
+    console[level](mdc:message, context);
+  }
+  
+  // In production, send to logging service
+  if (process.env.NODE_ENV === 'production') {
+    // Send to logging service (e.g., Datadog, LogDNA)
+    sendToLoggingService(entry);
+  }
+}
+```
+
+## ⚡ Code Splitting and Performance Optimization
+
+### Next.js Code Splitting
+
+- Leverage Next.js automatic code splitting for optimal bundle sizes
+- Implement dynamic imports for large components and libraries
+- Use React.lazy and Suspense for client-side component loading
+- Configure module federation for shared components across applications
+
+```typescript
+// Dynamic import with Next.js
+import dynamic from 'next/dynamic';
+
+// Basic dynamic import with loading state
+const DynamicChart = dynamic(() => import('@/components/Chart'), {
+  loading: () => <ChartSkeleton />,
+  // Only load component when it becomes visible
+  ssr: false,
+});
+
+// Dynamic import with custom loading and error handling
+const DynamicDataGrid = dynamic(
+  () => import('@/components/DataGrid').then((mod) => mod.DataGrid),
+  {
+    loading: () => <DataGridSkeleton />,
+    ssr: true,
+  }
+);
+
+// Conditionally loaded component based on feature flag
+const FeatureComponent = ({ featureEnabled }) => {
+  if (!featureEnabled) return null;
+  
+  const DynamicFeature = dynamic(() => import('@/features/NewFeature'), {
+    loading: () => <FeatureSkeleton />,
+  });
+  
+  return <DynamicFeature />;
+};
+
+// Client-side only component with no SSR
+const ClientOnlyComponent = dynamic(
+  () => import('@/components/ClientOnly'),
+  { ssr: false }
+);
+```
+
+### Bundle Analysis and Optimization
+
+- Regularly analyze bundle sizes with tools like `@next/bundle-analyzer`
+- Identify and optimize large dependencies
+- Implement tree-shaking for unused code
+- Configure module/nomodule pattern for modern browsers
+
+```javascript
+// next.config.js with bundle analyzer
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Enable production source maps for error tracking
+  productionBrowserSourceMaps: true,
+  
+  // Configure modern JavaScript features
+  swcMinify: true,
+  
+  // Optimize images
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'assets.solnai.com',
+      },
+    ],
+  },
+  
+  // Configure module federation (if needed)
+  experimental: {
+    outputFileTracingRoot: __dirname,
+    serverComponentsExternalPackages: ['sharp'],
+  },
+  
+  // Configure webpack
+  webpack: (config, { isServer, dev }) => {
+    // Add custom webpack configurations
+    
+    // Example: Add specific loader for SVGs
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ['@svgr/webpack'],
+    });
+    
+    // Example: Ignore specific packages on server
+    if (isServer) {
+      config.externals.push('some-client-only-package');
+    }
+    
+    return config;
+  },
+};
+
+module.exports = withBundleAnalyzer(nextConfig);
+```
+
+### Image and Asset Optimization
+
+- Use Next.js Image component for automatic image optimization
+- Implement responsive images with appropriate sizes
+- Optimize SVGs and icons
+- Implement lazy loading for below-the-fold images
+
+```typescript
+// Optimized image component
+import Image from 'next/image';
+
+function OptimizedImage({ src, alt, priority = false }) {
+  return (
+    <div className="relative w-full h-64 md:h-80 lg:h-96">
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        priority={priority}
+        className="object-cover rounded-lg"
+        loading={priority ? 'eager' : 'lazy'}
+      />
+    </div>
+  );
+}
+
+// SVG optimization with SVGR
+import { ReactComponent as Logo } from '@/assets/logo.svg';
+
+function Header() {
+  return (
+    <header className="flex items-center p-4">
+      <Logo className="w-8 h-8 text-primary" aria-hidden="true" />
+      <h1 className="ml-2 text-xl font-bold">SolnAI</h1>
+    </header>
+  );
+}
+
+// Font optimization with next/font
+import { Inter, Roboto_Mono } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+
+const robotoMono = Roboto_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-roboto-mono',
+});
+
+function RootLayout({ children }) {
+  return (
+    <html lang="en" className={`${inter.variable} ${robotoMono.variable}`}>
+      <body className="font-sans">{children}</body>
+    </html>
+  );
+}
+```
+
+### Performance Monitoring
+
+- Implement Core Web Vitals monitoring
+- Set up real user monitoring (RUM)
+- Track and optimize Time to First Byte (TTFB)
+- Monitor and improve First Contentful Paint (FCP) and Largest Contentful Paint (LCP)
+
+```typescript
+// Core Web Vitals reporting with web-vitals
+import { onCLS, onFID, onLCP, onTTFB, onINP } from 'web-vitals';
+
+function reportWebVitals({ name, delta, id, value }) {
+  // Send to analytics
+  sendAnalyticsEvent({
+    name,
+    value: Math.round(name === 'CLS' ? delta * 1000 : delta),
+    metric_id: id,
+    metric_value: value,
+  });
+  
+  // Log to console in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Web Vital: ${name}`, {
+      value: Math.round(name === 'CLS' ? delta * 1000 : delta),
+      metric_id: id,
+      metric_value: value,
+    });
+  }
+}
+
+export function WebVitalsReporter() {
+  React.useEffect(() => {
+    // Core Web Vitals
+    onCLS(reportWebVitals);
+    onFID(reportWebVitals);
+    onLCP(reportWebVitals);
+    
+    // Additional metrics
+    onTTFB(reportWebVitals);
+    onINP(reportWebVitals);
+  }, []);
+  
+  return null;
+}
+
+// Usage in _app.js or root layout
+function MyApp({ Component, pageProps }) {
+  return (
+    <>
+      <WebVitalsReporter />
+      <Component {...pageProps} />
+    </>
+  );
+}
+```
+
+### React Component Optimization
+
+- Implement memoization for expensive components
+- Use React.memo, useMemo, and useCallback appropriately
+- Optimize context usage to prevent unnecessary re-renders
+- Implement virtualization for long lists
+
+```typescript
+// Optimized list with virtualization
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+function VirtualizedList({ items }) {
+  const parentRef = React.useRef<HTMLDivElement>(null);
+  
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 50, // Estimated row height
+    overscan: 5, // Number of items to render outside of view
+  });
+  
+  return (
+    <div 
+      ref={parentRef} 
+      className="h-[500px] overflow-auto"
+      style={{ contain: 'strict' }}
+    >
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => (
+          <div
+            key={virtualItem.key}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: `${virtualItem.size}px`,
+              transform: `translateY(${virtualItem.start}px)`,
+            }}
+          >
+            <ListItem item={items[virtualItem.index]} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Memoized component with proper dependencies
+const ExpensiveComponent = React.memo(function ExpensiveComponent({ 
+  data, 
+  onAction 
+}) {
+  // Memoize expensive calculations
+  const processedData = React.useMemo(() => {
+    return data.map(item => expensiveTransformation(item));
+  }, [data]);
+  
+  // Memoize callback functions
+  const handleAction = React.useCallback((id) => {
+    onAction(id);
+  }, [onAction]);
+  
+  return (
+    <div>
+      {processedData.map(item => (
+        <div key={item.id} onClick={() => handleAction(item.id)}>
+          {item.name}
+        </div>
+      ))}
+    </div>
+  );
+});
+
+// Optimized context provider
+function OptimizedProvider({ children }) {
+  const [state, setState] = React.useState(initialState);
+  
+  // Split context into multiple providers to prevent unnecessary re-renders
+  const value = React.useMemo(() => ({
+    state,
+    setState,
+  }), [state]);
+  
+  return (
+    <StateContext.Provider value={value}>
+      {children}
+    </StateContext.Provider>
+  );
+}
+```
+
+### Server-Side Optimization
+
+- Implement Incremental Static Regeneration (ISR) for dynamic content
+- Use React Server Components for data-heavy components
+- Configure appropriate caching strategies
+- Implement stale-while-revalidate patterns
+
+```typescript
+// Page with ISR
+export async function getStaticProps() {
+  const data = await fetchData();
+  
+  return {
+    props: {
+      data,
+    },
+    // Revalidate every 60 seconds
+    revalidate: 60,
+  };
+}
+
+// API route with caching
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export async function GET(request: NextRequest) {
+  const data = await fetchData();
+  
+  // Set cache headers
+  return NextResponse.json(data, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=600',
+    },
+  });
+}
+
+// React Server Component
+export default async function Dashboard() {
+  // This data fetching happens on the server
+  const data = await fetchDashboardData();
+  
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <DashboardMetrics data={data.metrics} />
+      <RecentActivity activities={data.activities} />
+    </div>
+  );
+}
+```
+
+## 🔌 API Design Standards with tRPC
+
+### tRPC Architecture
+
+- Implement a type-safe API layer with tRPC
+- Organize routers by domain/feature
+- Implement proper error handling and validation
+- Document API endpoints and their usage
+
+```typescript
+// src/server/api/trpc.ts
+import { initTRPC, TRPCError } from '@trpc/server';
+import { type CreateNextContextOptions } from '@trpc/server/adapters/next';
+import superjson from 'superjson';
+import { ZodError } from 'zod';
+import { getServerSession } from 'next-auth';
+import { prisma } from '@/server/db';
+
+// Create context for each request
+export const createTRPCContext = async (opts: CreateNextContextOptions) => {
+  const { req, res } = opts;
+  const session = await getServerSession(req, res);
+  
+  return {
+    prisma,
+    session,
+    req,
+    res,
+  };
+};
+
+// Initialize tRPC
+const t = initTRPC.context<typeof createTRPCContext>().create({
+  transformer: superjson,
+  errorFormatter({ shape, error }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        zodError:
+          error.cause instanceof ZodError ? error.cause.flatten() : null,
+      },
+    };
+  },
+});
+
+// Create router and procedure helpers
+export const createTRPCRouter = t.router;
+export const publicProcedure = t.procedure;
+
+// Protected procedure that requires authentication
+export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
+  if (!ctx.session || !ctx.session.user) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      // Infers that the user is non-null
+      session: { ...ctx.session, user: ctx.session.user },
+    },
+  });
+});
+
+// Admin procedure that requires admin role
+export const adminProcedure = t.procedure.use(({ ctx, next }) => {
+  if (!ctx.session?.user?.role || ctx.session.user.role !== 'ADMIN') {
+    throw new TRPCError({ code: 'FORBIDDEN' });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      session: { ...ctx.session, user: ctx.session.user },
+    },
+  });
+});
+```
+
+### Router Organization
+
+- Organize routers by domain/feature
+- Implement proper input validation with Zod
+- Document router procedures and their usage
+- Implement proper error handling
+
+```typescript
+// src/server/api/routers/user.ts
+import { z } from 'zod';
+import { createTRPCRouter, protectedProcedure, adminProcedure } from '../trpc';
+import { TRPCError } from '@trpc/server';
+
+// Input validation schemas
+const userCreateSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(2).max(50),
+  role: z.enum(['USER', 'ADMIN']).optional(),
+});
+
+const userUpdateSchema = z.object({
+  id: z.string(),
+  name: z.string().min(2).max(50).optional(),
+  email: z.string().email().optional(),
+  role: z.enum(['USER', 'ADMIN']).optional(),
+});
+
+// User router
+export const userRouter = createTRPCRouter({
+  // Get current user
+  me: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.prisma.user.findUnique({
+      where: { id: ctx.session.user.id },
+    });
+    
+    if (!user) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found',
+      });
+    }
+    
+    return user;
+  }),
+  
+  // Get user by ID
+  getById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.prisma.user.findUnique({
+        where: { id: input.id },
+      });
+      
+      if (!user) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        });
+      }
+      
+      return user;
+    }),
+  
+  // Create user (admin only)
+  create: adminProcedure
+    .input(userCreateSchema)
+    .mutation(async ({ ctx, input }) => {
+      // Check if email already exists
+      const existingUser = await ctx.prisma.user.findUnique({
+        where: { email: input.email },
+      });
+      
+      if (existingUser) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'User with this email already exists',
+        });
+      }
+      
+      return ctx.prisma.user.create({
+        data: input,
+      });
+    }),
+  
+  // Update user
+  update: protectedProcedure
+    .input(userUpdateSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input;
+      
+      // Only admins can update other users
+      if (id !== ctx.session.user.id && ctx.session.user.role !== 'ADMIN') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Not authorized to update this user',
+        });
+      }
+      
+      return ctx.prisma.user.update({
+        where: { id },
+        data,
+      });
+    }),
+  
+  // Delete user (admin only)
+  delete: adminProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.user.delete({
+        where: { id: input.id },
+      });
+    }),
+});
+```
+
+### Root Router Configuration
+
+- Combine feature routers into a root router
+- Export type-safe router types
+- Configure API handler for Next.js
+
+```typescript
+// src/server/api/root.ts
+import { createTRPCRouter } from './trpc';
+import { userRouter } from './routers/user';
+import { postRouter } from './routers/post';
+import { commentRouter } from './routers/comment';
+import { authRouter } from './routers/auth';
+
+// Root router that combines all feature routers
+export const appRouter = createTRPCRouter({
+  user: userRouter,
+  post: postRouter,
+  comment: commentRouter,
+  auth: authRouter,
+});
+
+// Export type-safe router types
+export type AppRouter = typeof appRouter;
+
+// src/app/api/trpc/[trpc]/route.ts
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+import { appRouter } from '@/server/api/root';
+import { createTRPCContext } from '@/server/api/trpc';
+
+// API handler for Next.js App Router
+export const POST = async (req: Request) => {
+  return fetchRequestHandler({
+    endpoint: '/api/trpc',
+    req,
+    router: appRouter,
+    createContext: () => createTRPCContext({ req }),
+    onError:
+      process.env.NODE_ENV === 'development'
+        ? ({ path, error }) => {
+            console.error(`❌ tRPC error on ${path}: ${error.message}`);
+          }
+        : undefined,
+  });
+};
+```
+
+### Client-Side Integration
+
+- Configure tRPC client for Next.js
+- Implement React Query integration
+- Create custom hooks for common queries
+- Handle loading and error states
+
+```typescript
+// src/utils/api.ts
+import { createTRPCReact } from '@trpc/react-query';
+import { type AppRouter } from '@/server/api/root';
+
+// Create tRPC client
+export const api = createTRPCReact<AppRouter>();
+
+// src/app/providers.tsx
+'use client';
+
+import { useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { httpBatchLink, loggerLink } from '@trpc/client';
+import { api } from '@/utils/api';
+import superjson from 'superjson';
+
+// API provider component
+export function APIProvider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        refetchOnWindowFocus: false,
+      },
+    },
+  }));
+  
+  const [trpcClient] = useState(() => 
+    api.createClient({
+      transformer: superjson,
+      links: [
+        loggerLink({
+          enabled: (opts) =>
+            process.env.NODE_ENV === 'development' ||
+            (opts.direction === 'down' && opts.result instanceof Error),
+        }),
+        httpBatchLink({
+          url: '/api/trpc',
+        }),
+      ],
+    })
+  );
+  
+  return (
+    <api.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        {process.env.NODE_ENV === 'development' && (
+          <ReactQueryDevtools initialIsOpen={false} />
+        )}
+      </QueryClientProvider>
+    </api.Provider>
+  );
+}
+
+// src/app/layout.tsx
+import { APIProvider } from './providers';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <APIProvider>{children}</APIProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### Custom API Hooks
+
+- Create custom hooks for common queries
+- Implement proper error handling
+- Handle loading and error states
+- Implement optimistic updates
+
+```typescript
+// src/hooks/api/useUsers.ts
+import { api } from '@/utils/api';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+export function useUsers() {
+  const [isCreating, setIsCreating] = useState(false);
+  const utils = api.useUtils();
+  
+  // Query all users
+  const usersQuery = api.user.getAll.useQuery(undefined, {
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    onError: (error) => {
+      toast.error(`Failed to fetch users: ${error.message}`);
+    },
+  });
+  
+  // Create user mutation
+  const createUserMutation = api.user.create.useMutation({
+    onMutate: () => {
+      setIsCreating(true);
+    },
+    onSuccess: async () => {
+      toast.success('User created successfully');
+      // Invalidate queries to refetch data
+      await utils.user.getAll.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to create user: ${error.message}`);
+    },
+    onSettled: () => {
+      setIsCreating(false);
+    },
+  });
+  
+  // Update user mutation with optimistic updates
+  const updateUserMutation = api.user.update.useMutation({
+    // Optimistic update
+    onMutate: async (newUser) => {
+      // Cancel outgoing refetches
+      await utils.user.getAll.cancel();
+      
+      // Snapshot the previous value
+      const previousUsers = utils.user.getAll.getData();
+      
+      // Optimistically update to the new value
+      utils.user.getAll.setData(undefined, (old) => {
+        if (!old) return old;
+        return old.map((user) => 
+          user.id === newUser.id ? { ...user, ...newUser } : user
+        );
+      });
+      
+      return { previousUsers };
+    },
+    onError: (err, newUser, context) => {
+      toast.error(`Failed to update user: ${err.message}`);
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousUsers) {
+        utils.user.getAll.setData(undefined, context.previousUsers);
+      }
+    },
+    onSettled: () => {
+      // Sync with server once mutation is settled
+      void utils.user.getAll.invalidate();
+    },
+  });
+  
+  // Delete user mutation
+  const deleteUserMutation = api.user.delete.useMutation({
+    onSuccess: async () => {
+      toast.success('User deleted successfully');
+      await utils.user.getAll.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete user: ${error.message}`);
+    },
+  });
+  
+  return {
+    users: usersQuery.data ?? [],
+    isLoading: usersQuery.isLoading,
+    isError: usersQuery.isError,
+    error: usersQuery.error,
+    createUser: createUserMutation.mutate,
+    updateUser: updateUserMutation.mutate,
+    deleteUser: deleteUserMutation.mutate,
+    isCreating,
+    isUpdating: updateUserMutation.isPending,
+    isDeleting: deleteUserMutation.isPending,
+  };
+}
+```
+
+### Error Handling
+
+- Implement consistent error handling across the API
+- Use tRPC error codes for different error types
+- Provide meaningful error messages
+- Log errors for debugging
+
+```typescript
+// src/server/api/error-handler.ts
+import { TRPCError } from '@trpc/server';
+import { logger } from '@/lib/logger';
+
+// Error handler for database operations
+export async function handleDbOperation<T>(
+  operation: () => Promise<T>,
+  {
+    notFoundMessage = 'Resource not found',
+    conflictMessage = 'Resource already exists',
+    errorMessage = 'An error occurred',
+    resourceName = 'resource',
+  }: {
+    notFoundMessage?: string;
+    conflictMessage?: string;
+    errorMessage?: string;
+    resourceName?: string;
+  } = {}
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    // Log the error
+    logger.error('Database operation failed', { error, resourceName });
+    
+    // Handle Prisma errors
+    if (error.code === 'P2025') {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: notFoundMessage,
+      });
+    }
+    
+    if (error.code === 'P2002') {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: conflictMessage,
+      });
+    }
+    
+    // Handle other errors
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: errorMessage,
+      cause: error,
+    });
+  }
+}
+
+// Usage in a router
+const getPost = protectedProcedure
+  .input(z.object({ id: z.string() }))
+  .query(async ({ ctx, input }) => {
+    return handleDbOperation(
+      () => ctx.prisma.post.findUniqueOrThrow({
+        where: { id: input.id },
+        include: { author: true },
+      }),
+      {
+        notFoundMessage: 'Post not found',
+        resourceName: 'post',
+      }
+    );
+  });
+```
+
+### API Documentation
+
+- Document API endpoints and their usage
+- Generate API documentation from tRPC router
+- Provide examples for common use cases
+- Document error codes and their meaning
+
+```typescript
+// src/server/api/docs.ts
+import { generateOpenApiDocument } from 'trpc-openapi';
+import { appRouter } from './root';
+
+// Generate OpenAPI document
+export const openApiDocument = generateOpenApiDocument(appRouter, {
+  title: 'SolnAI API',
+  version: '1.0.0',
+  baseUrl: 'https://api.solnai.com',
+});
+
+// src/app/api/docs/route.ts
+import { NextResponse } from 'next/server';
+import { openApiDocument } from '@/server/api/docs';
+
+// API route to serve OpenAPI document
+export function GET() {
+  return NextResponse.json(openApiDocument);
+}
+``` 
+
+## 🛡️ Error Handling and Logging
+
+For detailed guidelines on error handling and logging, refer to the dedicated [Error Handling and Logging Standards](./error-handling-standards.mdc) document.
+
+Key principles include:
+- Implement consistent error handling patterns across the application
+- Create custom error classes for different error types
+- Use React Error Boundaries for client-side error handling
+- Establish structured logging with appropriate context
+- Configure robust monitoring and alerting systems
+
+```typescript
+// Example of a custom error class
+export class ApplicationError extends Error {
+  public readonly code: string;
+  public readonly statusCode: number;
+  
+  constructor(message: string, code = 'INTERNAL_ERROR', statusCode = 500) {
+    super(message);
+    this.name = this.constructor.name;
+    this.code = code;
+    this.statusCode = statusCode;
+  }
+}
+
+// Example of using Error Boundary in React
+'use client';
+
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+
+export default function UserProfilePage() {
+  return (
+    <ErrorBoundary fallback={<UserProfileErrorFallback />}>
+      <UserProfile />
+    </ErrorBoundary>
+  );
+}
+```
+
+## 🚩 Feature Flags
+
+### Feature Flag Implementation
+
+- Use feature flags to control feature rollout and experimentation
+- Implement a type-safe feature flag system
+- Configure feature flags by environment
+- Support gradual rollouts and A/B testing
+
+```typescript
+// src/lib/feature-flags/types.ts
+export interface FeatureFlag {
+  name: string;
+  description: string;
+  isEnabled: boolean;
+  enabledFor?: string[]; // User IDs or groups
+  rolloutPercentage?: number; // 0-100
+  expiresAt?: Date; // Optional expiration date
+}
+
+export interface FeatureFlagMap {
+  [key: string]: FeatureFlag;
+}
+
+// src/lib/feature-flags/index.ts
+import { createStore } from 'zustand';
+import { FeatureFlag, FeatureFlagMap } from './types';
+
+// Define available feature flags with TypeScript
+export enum FeatureFlags {
+  NEW_DASHBOARD = 'new-dashboard',
+  ADVANCED_ANALYTICS = 'advanced-analytics',
+  AI_ASSISTANT = 'ai-assistant',
+  BETA_FEATURES = 'beta-features',
+}
+
+interface FeatureFlagStore {
+  flags: FeatureFlagMap;
+  isEnabled: (flag: FeatureFlags, userId?: string) => boolean;
+  setFlag: (flag: FeatureFlags, value: boolean) => void;
+  updateFlag: (flag: FeatureFlags, updates: Partial<FeatureFlag>) => void;
+  fetchFlags: () => Promise<void>;
+}
+
+// Initial state for feature flags
+const initialFlags: FeatureFlagMap = {
+  [FeatureFlags.NEW_DASHBOARD]: {
+    name: FeatureFlags.NEW_DASHBOARD,
+    description: 'New dashboard UI',
+    isEnabled: false,
+  },
+  [FeatureFlags.ADVANCED_ANALYTICS]: {
+    name: FeatureFlags.ADVANCED_ANALYTICS,
+    description: 'Advanced analytics features',
+    isEnabled: false,
+    rolloutPercentage: 0,
+  },
+  [FeatureFlags.AI_ASSISTANT]: {
+    name: FeatureFlags.AI_ASSISTANT,
+    description: 'AI-powered assistant',
+    isEnabled: false,
+    enabledFor: [],
+  },
+  [FeatureFlags.BETA_FEATURES]: {
+    name: FeatureFlags.BETA_FEATURES,
+    description: 'Experimental beta features',
+    isEnabled: false,
+    enabledFor: [],
+  },
+};
+
+// Feature flag store
+export const useFeatureFlags = createStore<FeatureFlagStore>((set, get) => ({
+  flags: initialFlags,
+  
+  isEnabled: (flag: FeatureFlags, userId?: string) => {
+    const flagConfig = get().flags[flag];
+    
+    if (!flagConfig) return false;
+    
+    // If the flag is disabled, return false
+    if (!flagConfig.isEnabled) return false;
+    
+    // If the flag is enabled for specific users and a userId is provided
+    if (flagConfig.enabledFor?.length && userId) {
+      return flagConfig.enabledFor.includes(userId);
+    }
+    
+    // If the flag has a rollout percentage
+    if (typeof flagConfig.rolloutPercentage === 'number') {
+      // If 100%, everyone gets the feature
+      if (flagConfig.rolloutPercentage === 100) return true;
+      
+      // If 0%, no one gets the feature
+      if (flagConfig.rolloutPercentage === 0) return false;
+      
+      // For values in between, use deterministic hashing to ensure
+      // the same user always gets the same behavior
+      if (userId) {
+        const hash = simpleHash(userId) % 100;
+        return hash < flagConfig.rolloutPercentage;
+      }
+      
+      // Without a userId, use random chance
+      return Math.random() * 100 < flagConfig.rolloutPercentage;
+    }
+    
+    // If flag is expired, return false
+    if (flagConfig.expiresAt && new Date() > flagConfig.expiresAt) {
+      return false;
+    }
+    
+    // Otherwise, return the enabled status
+    return flagConfig.isEnabled;
+  },
+  
+  setFlag: (flag: FeatureFlags, value: boolean) => {
+    set((state) => ({
+      flags: {
+        ...state.flags,
+        [flag]: {
+          ...state.flags[flag],
+          isEnabled: value,
+        },
+      },
+    }));
+  },
+  
+  updateFlag: (flag: FeatureFlags, updates: Partial<FeatureFlag>) => {
+    set((state) => ({
+      flags: {
+        ...state.flags,
+        [flag]: {
+          ...state.flags[flag],
+          ...updates,
+        },
+      },
+    }));
+  },
+  
+  fetchFlags: async () => {
+    try {
+      // Fetch flags from API or config service
+      const response = await fetch('/api/feature-flags');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch feature flags');
+      }
+      
+      const flags = await response.json();
+      
+      set({ flags });
+    } catch (error) {
+      console.error('Failed to fetch feature flags:', error);
+      // Keep default values on error
+    }
+  },
+}));
+
+// Helper function to create a simple hash from a string
+function simpleHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+```
+
+### Feature Flag Usage
+
+- Use feature flags to safely deploy code to production
+- Implement feature flags in both server and client components
+- Create a feature flag admin UI for easy management
+- Maintain a clean feature flag lifecycle
+
+```typescript
+// Usage in a component
+import { useFeatureFlags, FeatureFlags } from '@/lib/feature-flags';
+import { useSession } from 'next-auth/react';
+
+function Dashboard() {
+  const { data: session } = useSession();
+  const isNewDashboardEnabled = useFeatureFlags((state) => 
+    state.isEnabled(FeatureFlags.NEW_DASHBOARD, session?.user?.id)
+  );
+  
+  return isNewDashboardEnabled ? <NewDashboard /> : <LegacyDashboard />;
+}
+
+// Feature flag admin UI component
+function FeatureFlagAdmin() {
+  const flags = useFeatureFlags((state) => state.flags);
+  const updateFlag = useFeatureFlags((state) => state.updateFlag);
+  
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-bold">Feature Flags</h2>
+      
+      {Object.values(flags).map((flag) => (
+        <div key={flag.name} className="p-4 border rounded-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium">{flag.name}</h3>
+              <p className="text-sm text-gray-500">{flag.description}</p>
+            </div>
+            
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={flag.isEnabled}
+                onChange={(e) => updateFlag(flag.name as FeatureFlags, {
+                  isEnabled: e.target.checked,
+                })}
+              />
+              <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          
+          {flag.isEnabled && (
+            <div className="mt-3 space-y-2">
+              {flag.rolloutPercentage !== undefined && (
+                <div>
+                  <label className="block text-sm font-medium">
+                    Rollout Percentage: {flag.rolloutPercentage}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={flag.rolloutPercentage}
+                    onChange={(e) => updateFlag(flag.name as FeatureFlags, {
+                      rolloutPercentage: parseInt(e.target.value, 10),
+                    })}
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Server-Side Feature Flags
+
+- Implement feature flags for server components and API routes
+- Create a consistent API for checking feature flag state
+- Configure feature flags for different environments
+- Use feature flags for database migrations and schema changes
+
+```typescript
+// src/lib/feature-flags/server.ts
+import { cookies } from 'next/headers';
+import { cache } from 'react';
+import { FeatureFlags } from './types';
+
+// Get feature flags from the database (cached)
+export const getFeatureFlags = cache(async () => {
+  try {
+    const flags = await prisma.featureFlag.findMany();
+    return flags.reduce((acc, flag) => {
+      acc[flag.name] = {
+        name: flag.name,
+        description: flag.description,
+        isEnabled: flag.isEnabled,
+        rolloutPercentage: flag.rolloutPercentage,
+        enabledFor: flag.enabledFor,
+        expiresAt: flag.expiresAt,
+      };
+      return acc;
+    }, {});
+  } catch (error) {
+    console.error('Failed to fetch feature flags:', error);
+    return {};
+  }
+});
+
+// Check if a feature flag is enabled
+export async function isFeatureEnabled(
+  flag: FeatureFlags,
+  userId?: string
+): Promise<boolean> {
+  const flags = await getFeatureFlags();
+  const flagConfig = flags[flag];
+  
+  if (!flagConfig) return false;
+  if (!flagConfig.isEnabled) return false;
+  
+  // Override with cookies in development
+  if (process.env.NODE_ENV === 'development') {
+    const cookieStore = cookies();
+    const override = cookieStore.get(`ff_${flag}`);
+    if (override) {
+      return override.value === 'true';
+    }
+  }
+  
+  // User-specific flag
+  if (flagConfig.enabledFor?.length && userId) {
+    return flagConfig.enabledFor.includes(userId);
+  }
+  
+  // Percentage rollout
+  if (typeof flagConfig.rolloutPercentage === 'number') {
+    if (flagConfig.rolloutPercentage === 100) return true;
+    if (flagConfig.rolloutPercentage === 0) return false;
+    
+    if (userId) {
+      const hash = simpleHash(userId) % 100;
+      return hash < flagConfig.rolloutPercentage;
+    }
+  }
+  
+  // Expiration
+  if (flagConfig.expiresAt && new Date() > flagConfig.expiresAt) {
+    return false;
+  }
+  
+  return flagConfig.isEnabled;
+}
+```
+
+### Feature Flag Best Practices
+
+- Keep the number of active feature flags manageable
+- Regularly clean up obsolete feature flags
+- Document all feature flags with clear descriptions
+- Use feature flags for gradual rollouts and experimentation
+- Consider using feature flags for A/B testing
+- Implement feature flags early in the development cycle
+
+```typescript
+// Feature flag lifecycle management
+// 1. Create a new feature flag
+// 2. Use the feature flag in code
+// 3. Release the feature flag to a small percentage of users
+// 4. Gradually increase the percentage
+// 5. Remove the feature flag once the feature is stable
+// 6. Clean up the feature flag references in code
+```

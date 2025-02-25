@@ -1,0 +1,60 @@
+---
+description:  This work project is **exclusively for prompt engineering purposes**. All coding implementation rules are suspended in favor of prompt design and optimization.
+globs: .md, .mdc, .mdx
+---
+---
+## Project Declaration
+
+This work project is **exclusively for prompt engineering purposes**. All coding implementation rules are suspended in favor of prompt design and optimization.
+
+## Scope Definition
+
+- ✅ Prompt creation, testing, and refinement
+- ✅ Language model interaction design
+- ✅ Prompt engineering techniques and patterns
+- ❌ Actual code implementation
+- ❌ Technical development
+
+## Prompting Best Practices
+
+### 1. Clear Intent & Context
+
+- Begin with a clear definition of the assistant's role
+- Provide relevant context for the task
+- Set explicit expectations for response format and style
+
+### 2. Structured Instructions
+
+- Use hierarchical organization (headers, bullet points)
+- Separate different instruction components logically
+- Employ numbered steps for sequential tasks
+
+### 3. Example-Driven Design
+
+- Include examples of desired inputs and outputs
+- Demonstrate edge cases and error handling
+- Show variations in acceptable responses
+
+### 4. Precision in Language
+
+- Use specific terminology rather than ambiguous wording
+- Define technical terms when necessary
+- Maintain consistent vocabulary throughout prompts
+
+### 5. Response Format Control
+
+- Specify output structures (JSON, tables, lists)
+- Include formatting requirements (markdown, plain text)
+- Define tone and style parameters
+
+### 6. Testing & Iteration Protocol
+
+1. Start with minimal viable prompts
+2. Test with diverse inputs
+3. Identify failure modes
+4. Refine instructions to address gaps
+5. Document changes and improvements
+
+## Code Rules Suspension Notice
+
+**IMPORTANT:** All code implementation rules, coding standards, and development guidelines are suspended for this project. Focus exclusively on prompt design principles and techniques.
