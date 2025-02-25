@@ -1,0 +1,480 @@
+# 🛡️ Error Handling and Logging Standards
+
+## Error Handling Architecture
+
+- Implement a consistent error handling strategy across the application
+- Create custom error classes for different error types
+- Use error boundaries for client-side error handling
+- Implement proper error logging and monitoring
+
+```typescript
+// src/lib/errors/application-error.ts
+export class ApplicationError extends Error {
+  public readonly code: string;
+  public readonly statusCode: number;
+  public readonly isOperational: boolean;
+  public readonly context?: Record<string, unknown>;
+
+  constructor({
+    message,
+    code = 'INTERNAL_ERROR',
+    statusCode = 500,
+    isOperational = true,
+    cause,
+    context,
+  }: {
+    message: string;
+    code?: string;
+    statusCode?: number;
+    isOperational?: boolean;
+    cause?: Error;
+    context?: Record<string, unknown>;
+  }) {
+    super(message);
+    this.name = this.constructor.name;
+    this.code = code;
+    this.statusCode = statusCode;
+    this.isOperational = isOperational;
+    this.cause = cause;
+    this.context = context;
+    
+    // Maintains proper stack trace (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+}
+
+// Specific error types
+export class ValidationError extends ApplicationError {
+  constructor(message: string, context?: Record<string, unknown>) {
+    super({
+      message,
+      code: 'VALIDATION_ERROR',
+      statusCode: 400,
+      isOperational: true,
+      context,
+    });
+  }
+}
+
+export class NotFoundError extends ApplicationError {
+  constructor(resource: string, id?: string) {
+    super({
+      message: `${resource} not found${id ? ` with ID ${id}` : ''}`,
+      code: 'NOT_FOUND',
+      statusCode: 404,
+      isOperational: true,
+      context: { resource, id },
+    });
+  }
+}
+
+export class AuthenticationError extends ApplicationError {
+  constructor(message = 'Authentication required') {
+    super({
+      message,
+      code: 'UNAUTHENTICATED',
+      statusCode: 401,
+      isOperational: true,
+    });
+  }
+}
+
+export class AuthorizationError extends ApplicationError {
+  constructor(message = 'Not authorized to perform this action') {
+    super({
+      message,
+      code: 'UNAUTHORIZED',
+      statusCode: 403,
+      isOperational: true,
+    });
+  }
+}
+```
+
+## Server-Side Error Handling
+
+- Implement middleware for catching and handling errors
+- Create consistent error responses
+- Log errors with appropriate context
+- Handle different types of errors appropriately
+
+```typescript
+// src/app/api/error-handler.ts
+import { NextResponse } from 'next/server';
+import { ZodError } from 'zod';
+import { logger } from '@/lib/logger';
+import { ApplicationError } from '@/lib/errors/application-error';
+
+// Error handler middleware for API routes
+export async function withErrorHandler(
+  handler: (req: Request) => Promise<Response>,
+  req: Request
+): Promise<Response> {
+  try {
+    return await handler(req);
+  } catch (error) {
+    // Log the error
+    logger.error('API error', { 
+      url: req.url,
+      method: req.method,
+      error,
+    });
+    
+    // Handle different error types
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Validation error',
+            details: error.format(),
+          },
+        },
+        { status: 400 }
+      );
+    }
+    
+    if (error instanceof ApplicationError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: error.code,
+            message: error.message,
+            ...(process.env.NODE_ENV === 'development' && {
+              context: error.context,
+              stack: error.stack,
+            }),
+          },
+        },
+        { status: error.statusCode }
+      );
+    }
+    
+    // Handle unknown errors
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'An unexpected error occurred',
+          ...(process.env.NODE_ENV === 'development' && {
+            details: error.message,
+            stack: error.stack,
+          }),
+        },
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// Usage in API route
+export async function GET(req: Request) {
+  return withErrorHandler(async () => {
+    // API logic here
+    const data = await fetchData();
+    return NextResponse.json({ success: true, data });
+  }, req);
+}
+```
+
+## Client-Side Error Handling
+
+- Implement React Error Boundaries
+- Create fallback UI components for different error scenarios
+- Handle API errors consistently
+- Provide user-friendly error messages
+
+```typescript
+// src/components/error-boundary.tsx
+'use client';
+
+import { Component, ErrorInfo, ReactNode } from 'react';
+import { logger } from '@/lib/logger';
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback?: ReactNode | ((error: Error) => ReactNode);
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log the error
+    logger.error('React error boundary caught error', {
+      error,
+      componentStack: errorInfo.componentStack,
+    });
+    
+    // Call onError callback if provided
+    this.props.onError?.(error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // Render fallback UI
+      if (this.props.fallback) {
+        if (typeof this.props.fallback === 'function') {
+          return this.props.fallback(this.state.error!);
+        }
+        return this.props.fallback;
+      }
+      
+      // Default fallback UI
+      return (
+        <div className="p-4 rounded-md bg-red-50 border border-red-200">
+          <h2 className="text-lg font-semibold text-red-800">
+            Something went wrong
+          </h2>
+          <p className="mt-2 text-sm text-red-700">
+            {this.state.error?.message || 'An unexpected error occurred'}
+          </p>
+          <button
+            className="mt-3 px-3 py-1 text-sm bg-red-100 text-red-800 rounded-md hover:bg-red-200"
+            onClick={() => this.setState({ hasError: false, error: null })}
+          >
+            Try again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Usage in layout or page component
+export default function DashboardLayout({ children }) {
+  return (
+    <ErrorBoundary
+      fallback={(error) => (
+        <DashboardErrorFallback error={error} />
+      )}
+    >
+      {children}
+    </ErrorBoundary>
+  );
+}
+```
+
+## API Error Handling
+
+- Create a consistent API error response format
+- Handle API errors in client-side code
+- Implement retry mechanisms for transient errors
+- Provide meaningful error messages to users
+
+```typescript
+// src/lib/api/error-handler.ts
+import { toast } from 'sonner';
+
+// API error response type
+interface ApiErrorResponse {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+}
+
+// Function to check if response is an API error
+export function isApiErrorResponse(response: unknown): response is ApiErrorResponse {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'success' in response &&
+    response.success === false &&
+    'error' in response &&
+    typeof response.error === 'object' &&
+    response.error !== null &&
+    'code' in response.error &&
+    'message' in response.error
+  );
+}
+
+// API error handler
+export function handleApiError(error: unknown, fallbackMessage = 'An error occurred'): string {
+  // Log the error
+  console.error('API error:', error);
+  
+  // Extract error message
+  if (isApiErrorResponse(error)) {
+    return error.error.message;
+  }
+  
+  if (error instanceof Error) {
+    return error.message;
+  }
+  
+  return fallbackMessage;
+}
+
+// API error handler with toast notification
+export function handleApiErrorWithToast(error: unknown, fallbackMessage = 'An error occurred'): void {
+  const message = handleApiError(error, fallbackMessage);
+  toast.error(message);
+}
+```
+
+## Logging Standards
+
+- Implement structured logging
+- Define log levels and their usage
+- Include relevant context in log messages
+- Configure appropriate log destinations
+
+```typescript
+// src/lib/logger/index.ts
+import { createLogger, format, transports } from 'winston';
+
+// Log levels
+export enum LogLevel {
+  ERROR = 'error',
+  WARN = 'warn',
+  INFO = 'info',
+  HTTP = 'http',
+  DEBUG = 'debug',
+}
+
+// Log context interface
+export interface LogContext {
+  [key: string]: unknown;
+}
+
+// Create Winston logger
+const winstonLogger = createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: format.combine(
+    format.timestamp(),
+    format.errors({ stack: true }),
+    format.json()
+  ),
+  defaultMeta: {
+    service: 'solnai-app',
+    environment: process.env.NODE_ENV,
+  },
+  transports: [
+    // Console transport for development
+    process.env.NODE_ENV !== 'production'
+      ? new transports.Console({
+          format: format.combine(
+            format.colorize(),
+            format.printf(({ timestamp, level, message, ...meta }) => {
+              return `${timestamp} [${level}]: ${message} ${
+                Object.keys(meta).length ? JSON.stringify(meta, null, 2) : ''
+              }`;
+            })
+          ),
+        })
+      : null,
+    // File transport for production
+    process.env.NODE_ENV === 'production'
+      ? new transports.File({ filename: 'logs/error.log', level: 'error' })
+      : null,
+    process.env.NODE_ENV === 'production'
+      ? new transports.File({ filename: 'logs/combined.log' })
+      : null,
+  ].filter(Boolean),
+});
+
+// Application logger
+export const logger = {
+  error(message: string, context?: LogContext) {
+    winstonLogger.error(message, context);
+  },
+  
+  warn(message: string, context?: LogContext) {
+    winstonLogger.warn(message, context);
+  },
+  
+  info(message: string, context?: LogContext) {
+    winstonLogger.info(message, context);
+  },
+  
+  http(message: string, context?: LogContext) {
+    winstonLogger.http(message, context);
+  },
+  
+  debug(message: string, context?: LogContext) {
+    winstonLogger.debug(message, context);
+  },
+};
+```
+
+## Monitoring and Alerting
+
+- Configure error monitoring services
+- Set up alerts for critical errors
+- Track error rates and patterns
+- Implement health checks for services
+
+```typescript
+// src/lib/monitoring/sentry.ts
+import * as Sentry from '@sentry/nextjs';
+
+// Initialize Sentry
+export function initSentry() {
+  if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+    Sentry.init({
+      dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+      environment: process.env.NODE_ENV,
+      release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
+      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+      integrations: [
+        new Sentry.BrowserTracing({
+          tracePropagationTargets: ['localhost', 'solnai.com'],
+        }),
+      ],
+    });
+  }
+}
+
+// Health check endpoint
+// src/app/api/health/route.ts
+import { NextResponse } from 'next/server';
+import { prisma } from '@/server/db';
+
+export async function GET() {
+  try {
+    // Check database connection
+    await prisma.$queryRaw`SELECT 1`;
+    
+    return NextResponse.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      version: process.env.NEXT_PUBLIC_APP_VERSION,
+      environment: process.env.NODE_ENV,
+    });
+  } catch (error) {
+    console.error('Health check failed', error);
+    
+    return NextResponse.json(
+      {
+        status: 'error',
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 }
+    );
+  }
+}
+``` 
