@@ -6,6 +6,7 @@ This guide provides comprehensive instructions for implementing accessible compo
 
 ## Accessibility Requirements
 
+
 - Minimum WCAG 2.1 AA compliance
 - Keyboard navigability for all interactive elements
 - Screen reader compatibility
@@ -22,6 +23,7 @@ Reference: [SOLNAI:ACCESSIBILITY]
 ### Common Components Implementation
 
 #### Accessible Button
+
 ```tsx
 import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -63,10 +65,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   }
 );
 Button.displayName = "Button";
-```
+
+```text
 
 #### Accessible Form Input
-```tsx
+
+t
+
+````tsx
 import { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -80,10 +86,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, error, label, id, ...props }, ref) => {
     const inputId = id || `input-${label.toLowerCase().replace(/\s+/g, '-')}`;
     const errorId = `${inputId}-error`;
-    
+
     return (
       <div className="space-y-2">
-        <label 
+        <label
           htmlFor={inputId}
           className="text-sm font-medium"
         >
@@ -102,8 +108,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error && (
-          <p 
-            id={errorId} 
+          <p
+            id={errorId}
             className="text-sm text-destructive"
           >
             {error}
@@ -113,22 +119,26 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     );
   }
 );
-Input.displayName = "Input";
-```
+Input.displayName = "Input"
 
-## Testing Accessibility
+``````t
 
-### Manual Testing Checklist
+## Testing Accessibilityi### Manual Testing Checklist
+
+st
+list
+
+
 - [ ] Navigate the entire application using only the keyboard
 - [ ] Test with screen readers (NVDA, VoiceOver)
 - [ ] Verify color contrast meets minimum requirements
 - [ ] Test at different zoom levels (up to 200%)
 - [ ] Verify all functionality works on mobile devices
 - [ ] Check that focus is visible and logical at all times
-- [ ] Verify that all images have appropriate alt text
+- [ ] Verify that all images have appropriate alt t### Automated Testing
 
-### Automated Testing
-```typescript
+st
+`````````typescript
 // Example accessibility test with jest-axe
 import { render } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -142,10 +152,9 @@ describe('MyComponent accessibility', () => {
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
-});
-```
+})
+## Validation Criteriaiteriaeriaia
 
-## Validation Criteria
 
 - [ ] All interactive elements are keyboard accessible
 - [ ] Focus order matches visual order
@@ -154,4 +163,6 @@ describe('MyComponent accessibility', () => {
 - [ ] Color contrast meets WCAG 2.1 AA standards
 - [ ] ARIA attributes are used correctly
 - [ ] Dynamic content changes are announced to screen readers
-- [ ] No accessibility violations in automated tests 
+
+
+- [ ] No accessibility violations in automated tests

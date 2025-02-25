@@ -1,4 +1,4 @@
-<!-- 
+<!--
 COMPONENT TEMPLATE
 -----------------
 Use this template when creating new prompt components.
@@ -7,6 +7,7 @@ Delete these instructions when you're done.
 -->
 
 <!-- SOLNAI:COMPONENT-KEY -->
+
 # Component Title
 
 ## 📋 Overview
@@ -14,6 +15,7 @@ Delete these instructions when you're done.
 Brief description of the component's purpose and role within the SolnAI application.
 
 ## 🎯 Objectives
+
 
 - Clearly defined objective 1
 - Clearly defined objective 2
@@ -30,6 +32,7 @@ Brief description of the component's purpose and role within the SolnAI applicat
 ### Core Functionality
 
 Detailed explanation of the component's core functionality, including:
+
 
 - Feature A
 - Feature B
@@ -53,9 +56,10 @@ export const Component: React.FC<ComponentProps> = (props) => {
     </div>
   );
 };
-```
 
-### Usage Example
+```text
+
+### Usage Examplee
 
 ```tsx
 // Example of how to use this component
@@ -68,11 +72,13 @@ export default function Page() {
     </div>
   );
 }
-```
 
-## ✅ Verification Checklist
+````tex
+
+## ✅ Verification Checkliststt
 
 Use this checklist to verify proper implementation:
+
 
 - [ ] Component renders correctly in all required contexts
 - [ ] All props are properly typed and documented
@@ -92,4 +98,5 @@ Use this checklist to verify proper implementation:
 - [Documentation Link 1]
 - [Documentation Link 2]
 - [Tutorial Link]
-<!-- /SOLNAI:COMPONENT-KEY --> 
+
+<!-- /SOLNAI:COMPONENT-KEY -->

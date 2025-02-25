@@ -26,13 +26,14 @@ Follow the directory structure exactly as specified in the reference. This struc
 
 ### Step 1: Setup Environment
 
-1. Create a `.env.local` file in the project root
-2. Add the following environment variables:
 
-   ```
+1. Create a `.env.local` file in the project root
+1. Add the following environment variables:
+
+   ```text
    NEXT_PUBLIC_APP_NAME=SolnAI
    NEXT_PUBLIC_APP_URL=http://localhost:3000
-   ```
+   ```text
 
 ### Step 2: Configure Tailwind CSS
 
@@ -93,9 +94,10 @@ module.exports = {
   },
   plugins: [require("tailwindcss-animate")],
 }
-```
 
-### Step 3: Create Core Utility Functions
+```text
+
+### Step 3: Create Core Utility Functionss
 
 Create a utility file at `src/lib/utils.ts`:
 
@@ -114,9 +116,10 @@ export function formatDate(date: Date): string {
     day: "numeric",
   }).format(date);
 }
-```
 
-### Step 4: Implement Button Component
+````tex
+
+### Step 4: Implement Button Componentntt
 
 Reference: [SOLNAI:BUTTON-COMPONENT]
 
@@ -154,12 +157,13 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
-```
 
-## ✅ Quality Standards
+`````t
+## ✅ Quality Standardsrdsdss
 
 ### Code Quality Standards
+
+
 
 - **TypeScript Strictness**: Maintain strict TypeScript typing for all components and functions
 
@@ -168,19 +172,22 @@ export default function RootLayout({
   function UserProfile({ user }: { user: User }): JSX.Element {
     return <div>{user.name}</div>;
   }
-  
+
   // ❌ Avoid
   function UserProfile({ user }): JSX.Element {
     return <div>{user.name}</div>;
   }
-  ```
+  ```text
+
+
 
 - **ESLint Compliance**: Ensure all code passes ESLint validation with no warnings or errors
 
   ```bash
   # Run ESLint before submitting any code
   pnpm lint
-  ```
+  ```text
+
 
 - **Naming Conventions**:
   - Components: PascalCase (e.g., `UserProfile.tsx`)
@@ -203,7 +210,7 @@ export default function RootLayout({
 - **Optimize Images**:
   - Use Next.js Image component with proper sizing
   - Implement lazy loading for off-screen images
-  
+
 - **Code Splitting**:
   - Use dynamic imports for large components
   - Implement route-based code splitting
@@ -245,6 +252,7 @@ export default function RootLayout({
 ## 🔍 Verification Checklist
 
 Use this checklist to verify your implementation:
+
 
 - [ ] Project initialized with correct Next.js configuration
 - [ ] Directory structure matches the reference specification

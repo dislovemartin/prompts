@@ -8,14 +8,15 @@ This guide provides a comprehensive approach to implementing API integration in 
 
 The SolnAI application uses a layered API architecture:
 
+
 1. **tRPC Backend**: Type-safe API routes implemented with tRPC
-2. **API Client**: A centralized client for making API requests
-3. **Data Fetching Hooks**: Custom hooks using TanStack Query for data fetching
-4. **Mutation Hooks**: Custom hooks for data modification operations
+1. **API Client**: A centralized client for making API requests
+2. **Data Fetching Hooks**: Custom hooks using TanStack Query for data fetching
+3. **Mutation Hooks**: Custom hooks for data modification operations
 
 ## File Structure
 
-```
+```text
 src/
 ├── server/
 │   ├── api/
@@ -48,7 +49,8 @@ src/
             ├── useCreateProject.ts   # Create project mutation
             ├── useUpdateDocument.ts  # Update document mutation
             └── useDeleteItem.ts      # Delete item mutation
-```
+
+```text
 
 ## Implementation Guide
 
@@ -115,9 +117,10 @@ export const adminProcedure = t.procedure.use(
     });
   })
 );
-```
 
-### 2. Creating API Routers
+````text
+
+### 2. Creating API Routerss
 
 Create domain-specific routers using Zod for input validation:
 
@@ -158,14 +161,14 @@ export const projectsRouter = router({
         where: { id: input.id },
         include: { documents: true },
       });
-      
+
       if (!project) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Project not found',
         });
       }
-      
+
       // Verify ownership
       if (project.userId !== ctx.session.user.id) {
         throw new TRPCError({
@@ -173,7 +176,7 @@ export const projectsRouter = router({
           message: 'Not authorized to access this project',
         });
       }
-      
+
       return project;
     }),
 
@@ -196,26 +199,26 @@ export const projectsRouter = router({
     .input(updateProjectSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      
+
       // Verify ownership before update
       const project = await ctx.prisma.project.findUnique({
         where: { id },
       });
-      
+
       if (!project) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Project not found',
         });
       }
-      
+
       if (project.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Not authorized to update this project',
         });
       }
-      
+
       return ctx.prisma.project.update({
         where: { id },
         data,
@@ -229,29 +232,30 @@ export const projectsRouter = router({
       const project = await ctx.prisma.project.findUnique({
         where: { id: input.id },
       });
-      
+
       if (!project) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Project not found',
         });
       }
-      
+
       if (project.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Not authorized to delete this project',
         });
       }
-      
+
       return ctx.prisma.project.delete({
         where: { id: input.id },
       });
     }),
-});
-```
+})
 
-### 3. Root Router Configuration
+``````tex
+
+### 3. Root Router Configurationonn
 
 Combine all domain routers into a root router:
 
@@ -271,10 +275,9 @@ export const appRouter = router({
 });
 
 // Export type definition of API
-export type AppRouter = typeof appRouter;
-```
-
-### 4. tRPC HTTP Handler Setup
+export type AppRouter = typeof appRout
+`````````t
+### 4. tRPC HTTP Handler Setuptupupp
 
 Create the API route handler:
 
@@ -292,10 +295,10 @@ const handler = (req: Request) =>
     createContext: () => createTRPCContext({ req }),
   });
 
-export { handler as GET, handler as POST };
-```
-
-### 5. API Client Setup
+export { handler as GET, handler as P
+````````text
+`
+### 5. API Client Setupetuptupup
 
 Create a client-side tRPC client:
 
@@ -332,11 +335,10 @@ export const trpcClient = trpc.createClient({
         });
       },
     }),
-  ],
-});
-```
 
-### 6. tRPC Provider Setup
+```te
+``````;
+### 6. tRPC Provider SetupSetupetuptup
 
 Set up the tRPC provider at the application root:
 
@@ -363,10 +365,8 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
       </QueryClientProvider>
     </trpc.Provider>
   );
-}
-```
 
-### 7. Data Fetching Hooks
+### 7. Data Fetching Hooks HooksHooks
 
 Create custom hooks for data fetching operations:
 
@@ -378,7 +378,7 @@ import { useSession } from 'next-auth/react';
 export const useProjects = () => {
   const { data: session } = useSession();
   const isAuthenticated = !!session?.user;
-  
+
   return trpc.projects.getAll.useQuery(undefined, {
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -388,15 +388,12 @@ export const useProjects = () => {
 export const useProject = (id: string | undefined) => {
   const { data: session } = useSession();
   const isAuthenticated = !!session?.user;
-  
+
   return trpc.projects.getById.useQuery({ id: id! }, {
     enabled: isAuthenticated && !!id,
     staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-```
-
-### 8. Mutation Hooks
+  
+### 8. Mutation Hooksn Hooks Hooksooks
 
 Create custom hooks for data modification operations:
 
@@ -407,7 +404,7 @@ import { toast } from '@/components/ui/Toast'; // Assuming you have a Toast comp
 
 export const useCreateProject = () => {
   const utils = trpc.useContext();
-  
+
   return trpc.projects.create.useMutation({
     onSuccess: async () => {
       // Invalidate query to refresh projects list
@@ -427,9 +424,8 @@ export const useCreateProject = () => {
     },
   });
 };
-```
 
-### 9. Implementing Optimistic Updates
+### 9. Implementing Optimistic Updates Updates
 
 For a better user experience, implement optimistic updates:
 
@@ -441,34 +437,34 @@ import { Project } from '@/types';
 
 export const useUpdateProject = () => {
   const utils = trpc.useContext();
-  
+
   return trpc.projects.update.useMutation({
     // Optimistically update UI before the server responds
     onMutate: async (newProject) => {
       // Cancel outgoing refetches that might overwrite our optimistic update
       await utils.projects.getAll.cancel();
-      
+
       // Save snapshot of previous data
       const previousProjects = utils.projects.getAll.getData();
-      
+
       // Optimistically update the cache
       utils.projects.getAll.setData(undefined, (old) => {
         if (!old) return old;
-        return old.map((project) => 
+        return old.map((project) =>
           project.id === newProject.id ? { ...project, ...newProject } : project
         );
       });
-      
+
       // If the project detail is in the cache, update it too
       utils.projects.getById.setData({ id: newProject.id }, (old) => {
         if (!old) return old;
         return { ...old, ...newProject };
       });
-      
+
       // Return the snapshot for rollback in case of error
       return { previousProjects };
     },
-    
+
     // If the mutation fails, roll back to the snapshot
     onError: (err, newProject, context) => {
       utils.projects.getAll.setData(undefined, context?.previousProjects);
@@ -478,12 +474,12 @@ export const useUpdateProject = () => {
         variant: 'destructive',
       });
     },
-    
+
     // Always refetch after error or success to ensure consistency
     onSettled: async () => {
       await utils.projects.getAll.invalidate();
     },
-    
+
     onSuccess: () => {
       toast({
         title: 'Success',
@@ -491,11 +487,8 @@ export const useUpdateProject = () => {
         variant: 'success',
       });
     },
-  });
-};
-```
 
-### 10. Error Handling
+### 10. Error Handling Handlingandling
 
 Implement consistent API error handling:
 
@@ -514,21 +507,21 @@ export const formatApiError = (error: unknown): ApiError => {
   if (error instanceof TRPCClientError) {
     // Extract the error details from the TRPC error
     const trpcError = error.data;
-    
+
     return {
       code: trpcError?.code || 'INTERNAL_SERVER_ERROR',
       message: error.message || 'An unknown error occurred',
       path: trpcError?.path,
     };
   }
-  
+
   if (error instanceof Error) {
     return {
       code: 'CLIENT_ERROR',
       message: error.message || 'An unknown error occurred',
     };
   }
-  
+
   return {
     code: 'UNKNOWN',
     message: 'An unknown error occurred',
@@ -537,7 +530,7 @@ export const formatApiError = (error: unknown): ApiError => {
 
 export const handleApiError = (error: unknown, fallbackMessage: string = 'An error occurred'): void => {
   const formatted = formatApiError(error);
-  
+
   const errorCodes: Record<string, string> = {
     'UNAUTHORIZED': 'You need to sign in to access this resource',
     'FORBIDDEN': 'You don\'t have permission to access this resource',
@@ -546,21 +539,17 @@ export const handleApiError = (error: unknown, fallbackMessage: string = 'An err
     'INTERNAL_SERVER_ERROR': 'Something went wrong on our end',
     'TIMEOUT': 'Request timed out',
   };
-  
+
   toast({
     title: 'Error',
     description: errorCodes[formatted.code] || formatted.message || fallbackMessage,
     variant: 'destructive',
   });
-  
+
   // You might want to log the error to a monitoring service
   if (process.env.NODE_ENV !== 'production') {
-    console.error('API Error:', formatted);
-  }
-};
-```
-
-### 11. Data Prefetching (SSR Support)
+    console.error('API Error:', format
+### 11. Data Prefetching (SSR Support)R Support)Support)port)
 
 Implement server-side prefetching for initial data loads:
 
@@ -576,7 +565,7 @@ import Dashboard from '@/components/dashboard/DashboardContent';
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
-  
+
   // Create server-side helpers
   const helpers = createServerSideHelpers({
     router: appRouter,
@@ -586,10 +575,10 @@ export default async function DashboardPage() {
     },
     transformer: superjson,
   });
-  
+
   // Prefetch data
   await helpers.projects.getAll.prefetch();
-  
+
   return (
     <div>
       {/* Pass the helpers to the client component */}
@@ -616,10 +605,10 @@ export default function Dashboard({ trpcState }: { trpcState: any }) {
 
 function DashboardContent() {
   const { data: projects, isLoading, error } = useProjects();
-  
+
   if (isLoading) return <div>Loading projects...</div>;
   if (error) return <div>Error loading projects</div>;
-  
+
   return (
     <div>
       <h1>Your Projects</h1>
@@ -628,12 +617,8 @@ function DashboardContent() {
           <li key={project.id}>{project.name}</li>
         ))}
       </ul>
-    </div>
-  );
-}
-```
-
-### 12. Rate Limiting and API Protection
+  
+### 12. Rate Limiting and API Protection Protectionrotectionection
 
 Implement rate limiting for API routes:
 
@@ -656,23 +641,23 @@ const ratelimit = new Ratelimit({
 const handler = async (req: Request) => {
   // Get IP address for rate limiting
   const ip = req.headers.get('x-forwarded-for') || 'anonymous';
-  
+
   // Rate limit check
   const { success } = await ratelimit.limit(ip);
-  
+
   if (!success) {
     return new NextResponse(
       JSON.stringify({
         message: 'Too many requests',
         code: 'TOO_MANY_REQUESTS',
       }),
-      { 
-        status: 429, 
-        headers: { 'content-type': 'application/json' } 
+      {
+        status: 429,
+        headers: { 'content-type': 'application/json' }
       }
     );
   }
-  
+
   // Proceed with the request if rate limit is not exceeded
   return fetchRequestHandler({
     endpoint: '/api/trpc',
@@ -682,10 +667,8 @@ const handler = async (req: Request) => {
   });
 };
 
-export { handler as GET, handler as POST };
-```
-
-## API Integration Patterns
+export { handler as GET, 
+## API Integration Patternsion Patternsn Patternsatterns
 
 ### 1. Fetching Data in Components
 
@@ -698,10 +681,10 @@ import { ProjectCard } from '@/components/ui/ProjectCard';
 
 export function ProjectList() {
   const { data: projects, isLoading, error } = useProjects();
-  
+
   if (isLoading) return <div>Loading projects...</div>;
   if (error) return <div>Error loading projects: {error.message}</div>;
-  
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {projects?.length === 0 ? (
@@ -712,11 +695,8 @@ export function ProjectList() {
         ))
       )}
     </div>
-  );
-}
-```
 
-### 2. Creating and Updating Data
+### 2. Creating and Updating DataUpdating Data
 
 ```tsx
 // src/components/features/CreateProjectForm.tsx
@@ -741,7 +721,7 @@ type FormValues = z.infer<typeof createProjectSchema>;
 export function CreateProjectForm() {
   const { mutate, isLoading } = useCreateProject();
   const [error, setError] = useState<string | null>(null);
-  
+
   const {
     register,
     handleSubmit,
@@ -754,7 +734,7 @@ export function CreateProjectForm() {
       description: '',
     },
   });
-  
+
   const onSubmit = async (data: FormValues) => {
     setError(null);
     mutate(data, {
@@ -766,25 +746,25 @@ export function CreateProjectForm() {
       },
     });
   };
-  
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
         <div className="bg-red-50 p-4 rounded-md text-red-500">{error}</div>
       )}
-      
+
       <Input
         label="Project Name"
         {...register('name')}
         error={errors.name?.message}
       />
-      
+
       <Textarea
         label="Description"
         {...register('description')}
         error={errors.description?.message}
       />
-      
+
       <Button
         type="submit"
         variant="primary"
@@ -794,11 +774,8 @@ export function CreateProjectForm() {
         Create Project
       </Button>
     </form>
-  );
-}
-```
 
-### 3. Infinite Loading
+### 3. Infinite Loadingfinite Loading
 
 ```tsx
 // src/hooks/api/queries/useInfiniteDocuments.ts
@@ -823,31 +800,31 @@ import { DocumentCard } from '@/components/ui/DocumentCard';
 import { Button } from '@/components/ui/Button';
 
 export function DocumentList({ projectId }: { projectId: string }) {
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } = 
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
     useInfiniteDocuments(projectId);
-  
+
   const { ref, inView } = useInView();
-  
+
   // Load more documents when the load more sentinel comes into view
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
-  
+
   if (isLoading) return <div>Loading documents...</div>;
   if (error) return <div>Error loading documents: {error.message}</div>;
-  
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4">
-        {data?.pages.map((page) => 
+        {data?.pages.map((page) =>
           page.items.map((document) => (
             <DocumentCard key={document.id} document={document} />
           ))
         )}
       </div>
-      
+
       {hasNextPage && (
         <div ref={ref} className="flex justify-center py-4">
           <Button
@@ -859,18 +836,15 @@ export function DocumentList({ projectId }: { projectId: string }) {
           </Button>
         </div>
       )}
-      
+
       {!hasNextPage && data?.pages[0].items.length > 0 && (
         <div className="text-center py-4 text-gray-500">
           No more documents to load
         </div>
       )}
     </div>
-  );
-}
-```
 
-## Testing API Integration
+## Testing API IntegrationAPI Integration
 
 ### 1. Unit Testing API Hooks
 
@@ -939,7 +913,7 @@ describe('useProjects', () => {
 
   it('should handle error state', async () => {
     const mockError = new Error('Failed to fetch projects');
-    
+
     // Setup the mock return value for error state
     (trpc.projects.getAll.useQuery as vi.Mock).mockReturnValue({
       data: undefined,
@@ -953,11 +927,8 @@ describe('useProjects', () => {
 
     expect(result.current.error).toEqual(mockError);
     expect(result.current.data).toBeUndefined();
-  });
-});
-```
 
-### 2. Integration Testing API Routes
+### 2. Integration Testing API Routessting API Routes
 
 ```typescript
 // src/server/api/routers/__tests__/projects.test.ts
@@ -1046,33 +1017,31 @@ describe('Projects Router', () => {
         },
       },
     });
-  });
-});
-```
 
-## API Security Best Practices
+## API Security Best Practicesty Best Practices
+
 
 1. **Input Validation**
    - Use Zod for schema validation on all inputs
    - Validate data types, length constraints, and business rules
    - Sanitize user input to prevent injection attacks
 
-2. **Authentication and Authorization**
+1. **Authentication and Authorization**
    - Use middleware for route protection
    - Implement role-based access control
    - Verify resource ownership before operations
 
-3. **Rate Limiting**
+1. **Rate Limiting**
    - Implement rate limiting for API routes
    - Use different limits for different endpoints
    - Consider user roles for limit tiers
 
-4. **Error Handling**
+1. **Error Handling**
    - Return consistent error responses
    - Don't expose sensitive information in errors
    - Log detailed errors server-side only
 
-5. **CORS Configuration**
+1. **CORS Configuration**
    - Set up proper CORS headers
    - Limit allowed origins in production
    - Use strict CORS settings

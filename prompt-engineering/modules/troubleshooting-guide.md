@@ -14,6 +14,7 @@ Reference: [SOLNAI:TROUBLESHOOTING]
 
 **Symptoms:**
 
+
 - Error message in console about hydration mismatch
 - UI elements flashing or changing after initial render
 
@@ -37,25 +38,27 @@ import { useEffect, useState } from 'react';
 
 export function ClientSideComponent() {
   const [windowWidth, setWindowWidth] = useState(0);
-  
+
   useEffect(() => {
     setWindowWidth(window.innerWidth);
-    
+
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
+
   return <div>Window width: {windowWidth}px</div>;
 }
-```
+
+```text
 
 #### 2. "Error: Cannot find module '@/components/...'"
 
 **Symptoms:**
+
 
 - Import error despite the file existing
 - Path aliases not resolving correctly
@@ -70,6 +73,7 @@ export function ClientSideComponent() {
 #### 3. "Error: The 'src' property is invalid in server components"
 
 **Symptoms:**
+
 
 - Error when using `next/image` in server components
 
@@ -86,13 +90,15 @@ module.exports = {
     domains: ['example.com', 'cdn.example.com'],
   },
 };
-```
 
-### State Management Issues
+````text
+
+### State Management Issuess
 
 #### 1. "State updates not reflecting in UI"
 
 **Symptoms:**
+
 
 - UI not updating after state changes
 - Inconsistent state across components
@@ -123,12 +129,14 @@ set((state) => ({
     ...state.user,
     name: 'New Name', // ✅ Creating new object
   },
-}));
-```
+}))
 
-#### 2. "React Query stale data issues"
+``````tex
+
+#### 2. "React Query stale data issues"s""
 
 **Symptoms:**
+
 
 - Data not refreshing when expected
 - Stale data displayed after mutations
@@ -147,14 +155,14 @@ mutation.mutate(newData, {
     // Also invalidate more specific queries
     queryClient.invalidateQueries(['projects', projectId]);
   },
-});
-```
 
-### API Integration Issues
+````````t
+### API Integration Issuesuesess
 
 #### 1. "CORS errors when calling API"
 
 **Symptoms:**
+
 
 - Console errors about CORS policy
 - API requests failing in browser but working in Postman
@@ -178,16 +186,18 @@ mutation.mutate(newData, {
 - Check input validation schemas
 - Verify procedure definitions match client usage
 
-```bash
+`
 # Regenerate tRPC types
-pnpm type-check
-```
-
-### Authentication Issues
+es
+pes
+ypes
+pnpm type-c
+### Authentication IssuesIssuesssuessues
 
 #### 1. "Session not persisting after refresh"
 
 **Symptoms:**
+
 
 - User logged out after page refresh
 - Auth state inconsistent between pages
@@ -207,13 +217,10 @@ export default function RootLayout({ children, session }) {
     <SessionProvider session={session}>
       {children}
     </SessionProvider>
-  );
-}
-```
-
-#### 2. "Protected routes accessible to unauthenticated users"
+#### 2. "Protected routes accessible to unauthenticated users" users"users"sers"
 
 **Symptoms:**
+
 
 - Unauthenticated users can access protected content
 - Redirect loops in authentication flow
@@ -230,7 +237,7 @@ Reference: [SOLNAI:ARCHITECTURE-DIAGRAMS]
 
 ### Application Architecture Overview
 
-```
+```text
 ┌─────────────────────────────────────┐
 │              Browser                │
 └───────────────┬─────────────────────┘
@@ -265,11 +272,10 @@ Reference: [SOLNAI:ARCHITECTURE-DIAGRAMS]
 │  │           Supabase          │    │
 │  └─────────────────────────────┘    │
 └─────────────────────────────────────┘
-```
 
-### Component Relationship Diagram
+### Component Relationship Diagram Diagram
 
-```
+```text
 ┌───────────────────────────────────────────────────────────┐
 │                       App Layout                          │
 │                                                           │
@@ -291,12 +297,10 @@ Reference: [SOLNAI:ARCHITECTURE-DIAGRAMS]
 │                    │   UI         │                      │
 │                    │   Components │                      │
 │                    └──────────────┘                      │
-└───────────────────────────────────────────────────────────┘
-```
+└─────────────────────────────────────────────────
+### Data Flow Diagramw DiagramDiagramiagram
 
-### Data Flow Diagram
-
-```
+```text
 ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
 │  UI Events  │───►  │   Zustand   │ ◄─── │  API Hooks  │
 │  (Actions)  │      │   Store     │      │  (Queries)  │
@@ -313,12 +317,11 @@ Reference: [SOLNAI:ARCHITECTURE-DIAGRAMS]
                                          │             │
                                          │  Database   │
                                          │             │
-                                         └─────────────┘
-```
-
-## Development Workflow
+                                         └
+## Development Workflowt WorkflowWorkfloworkflow
 
 ### Standard Development Process
+
 
 1. **Planning Phase**
    - Understand requirements thoroughly
@@ -326,21 +329,19 @@ Reference: [SOLNAI:ARCHITECTURE-DIAGRAMS]
    - Identify dependencies and potential challenges
    - Define acceptance criteria
 
-2. **Setup Phase**
+1. **Setup Phase**
    - Create feature branch from main
 
    ```bash
    git checkout -b feature/your-feature-name
-   ```
-
+   ```text
    - Set up environment variables if needed
    - Install any new dependencies required
 
    ```bash
    pnpm add package-name@version
-   ```
-
-3. **Implementation Phase**
+   ```text
+1. **Implementation Phase**
    - Follow component architecture patterns
    - Start with types and interfaces
    - Build UI components
@@ -350,27 +351,27 @@ Reference: [SOLNAI:ARCHITECTURE-DIAGRAMS]
 
    ```bash
    git commit -m "feat: implement feature-name component"
-   ```
+   ```text
 
-4. **Testing Phase**
+
+1. **Testing Phase**
    - Write unit tests for components
    - Run test suite
 
    ```bash
    pnpm test
-   ```
-
+   ```text
    - Perform manual testing
    - Verify accessibility compliance
    - Address any issues found
 
-5. **Review Phase**
+1. **Review Phase**
    - Create pull request with comprehensive description
    - Respond to code review comments
    - Make necessary adjustments
    - Ensure CI/CD pipeline passes
 
-6. **Deployment Phase**
+1. **Deployment Phase**
    - Merge to main after approval
    - Monitor deployment process
    - Verify feature in staging/production
@@ -380,21 +381,26 @@ Reference: [SOLNAI:ARCHITECTURE-DIAGRAMS]
 
 If multiple developers are working on overlapping features:
 
+
 1. Communicate early and often about your changes
-2. Keep PRs small and focused
-3. Rebase your branch frequently to incorporate latest changes
+1. Keep PRs small and focused
+2. Rebase your branch frequently to incorporate latest changes
 
 ```bash
 git fetch origin
-git rebase origin/main
-```
+git rebase origin
+```````
+`````te
+``````text
 
-4. Resolve conflicts carefully, preserving intent of both changes
-5. Consider pair programming for complex integration points
+
+1. Resolve conflicts carefully, preserving intent of both changes
+1. Consider pair programming for complex integration points
 
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (Weeks 1-2)
+
 
 - Project initialization
 - Core UI components

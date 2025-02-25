@@ -8,14 +8,15 @@ This guide provides a comprehensive approach to implementing state management in
 
 The SolnAI application uses a hybrid state management approach:
 
+
 1. **Zustand**: For client-side global state management
-2. **TanStack Query**: For server state and data fetching
-3. **React Context**: For localized UI state
-4. **Local Component State**: For component-specific states
+1. **TanStack Query**: For server state and data fetching
+2. **React Context**: For localized UI state
+3. **Local Component State**: For component-specific states
 
 ## File Structure
 
-```
+```text
 src/
 ├── lib/
 │   └── store/
@@ -45,7 +46,8 @@ src/
         ├── useTheme.ts              # Theme state hook
         ├── useAuthState.ts          # Auth state hook
         └── useProjectState.ts       # Project state hook
-```
+
+```text
 
 ## Implementation Guide
 
@@ -63,7 +65,7 @@ import { createProjectSlice, ProjectSlice } from './slices/projectSlice'
 import { createAISlice, AISlice } from './slices/aiSlice'
 
 export type StoreState = AuthSlice & UISlice & ProjectSlice & AISlice
-export type StoreActions = AuthSlice['actions'] & UISlice['actions'] & 
+export type StoreActions = AuthSlice['actions'] & UISlice['actions'] &
                           ProjectSlice['actions'] & AISlice['actions']
 
 export const useStore = create<StoreState>()(
@@ -83,9 +85,10 @@ export const useStore = create<StoreState>()(
     }
   )
 )
-```
 
-### 2. Creating a Store Slice
+````text
+
+### 2. Creating a Store Slicee
 
 Here's how to implement a store slice using the authentication slice as an example:
 
@@ -135,26 +138,27 @@ export const createAuthSlice: StateCreator<
     error: null,
   },
   actions: {
-    setUser: (user) => set((state) => ({ 
-      auth: { ...state.auth, user, isAuthenticated: !!user } 
+    setUser: (user) => set((state) => ({
+      auth: { ...state.auth, user, isAuthenticated: !!user }
     })),
-    setAuthenticated: (status) => set((state) => ({ 
-      auth: { ...state.auth, isAuthenticated: status } 
+    setAuthenticated: (status) => set((state) => ({
+      auth: { ...state.auth, isAuthenticated: status }
     })),
-    setLoading: (status) => set((state) => ({ 
-      auth: { ...state.auth, isLoading: status } 
+    setLoading: (status) => set((state) => ({
+      auth: { ...state.auth, isLoading: status }
     })),
-    setError: (error) => set((state) => ({ 
-      auth: { ...state.auth, error } 
+    setError: (error) => set((state) => ({
+      auth: { ...state.auth, error }
     })),
-    logout: () => set((state) => ({ 
-      auth: { ...state.auth, user: null, isAuthenticated: false } 
+    logout: () => set((state) => ({
+      auth: { ...state.auth, user: null, isAuthenticated: false }
     })),
   },
-})
-```
+}
 
-### 3. Creating a Custom Hook for State Access
+``````tex
+
+### 3. Creating a Custom Hook for State Accesssss
 
 Create a custom hook to provide type-safe access to store slices:
 
@@ -165,7 +169,7 @@ import { useStore } from '@/lib/store'
 export const useAuthState = () => {
   const auth = useStore((state) => state.auth)
   const actions = useStore((state) => state.actions)
-  
+
   return {
     user: auth.user,
     isAuthenticated: auth.isAuthenticated,
@@ -176,11 +180,9 @@ export const useAuthState = () => {
     setLoading: actions.setLoading,
     setError: actions.setError,
     logout: actions.logout,
-  }
-}
-```
 
-### 4. TanStack Query Setup
+````````t
+### 4. TanStack Query Setuptupupp
 
 Configure TanStack Query for server state management:
 
@@ -196,11 +198,10 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       retry: 1,
     },
-  },
-})
-```
 
-### 5. Creating Query Hooks
+``````text
+`
+### 5. Creating Query Hooksooksoksks
 
 Implement query hooks for data fetching:
 
@@ -212,16 +213,14 @@ import { useAuthState } from '@/hooks/state/useAuthState'
 
 export const useProjects = () => {
   const { user } = useAuthState()
-  
+
   return useQuery({
     queryKey: ['projects', user?.id],
     queryFn: () => fetchProjects(),
     enabled: !!user,
-  })
-}
-```
 
-### 6. Creating Mutation Hooks
+```}
+### 6. Creating Mutation HooksHooksooksoks
 
 Implement mutation hooks for data updates:
 
@@ -233,17 +232,15 @@ import { Project } from '@/types'
 
 export const useCreateProject = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (newProject: Omit<Project, 'id'>) => createProject(newProject),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
-}
-```
 
-### 7. Combining Zustand and TanStack Query
+### 7. Combining Zustand and TanStack Query QueryQuery
 
 Example of combining global state and server state:
 
@@ -257,16 +254,16 @@ import { useProjectState } from '@/hooks/state/useProjectState'
 export const ProjectList = () => {
   const { data: projects, isLoading, error } = useProjects()
   const { selectedProjectId, setSelectedProject } = useProjectState()
-  
+
   if (isLoading) return <div>Loading projects...</div>
   if (error) return <div>Error loading projects</div>
-  
+
   return (
     <div>
       <h2>Your Projects</h2>
       <ul>
         {projects?.map((project) => (
-          <li 
+          <li
             key={project.id}
             className={project.id === selectedProjectId ? 'selected' : ''}
             onClick={() => setSelectedProject(project.id)}
@@ -276,33 +273,38 @@ export const ProjectList = () => {
         ))}
       </ul>
     </div>
-  )
-}
-```
 
-## State Management Best Practices
+## State Management Best Practicesacticesctices
 
 ### Performance Optimization
+
+
 
 1. **Selective Subscription**: Subscribe only to the parts of the state you need:
    ```typescript
    // Avoid
    const entireState = useStore()
-   
+
    // Recommended
    const user = useStore(state => state.auth.user)
-   ```
+   ```text
 
-2. **Memoization**: Use memoization for complex selectors:
+
+
+1. **Memoization**: Use memoization for complex selectors:
+
    ```typescript
    // src/lib/store/selectors/projectSelectors.ts
    import { StoreState } from '..'
 
-   export const getActiveProjects = (state: StoreState) => 
+   export const getActiveProjects = (state: StoreState) =>
      state.projects.items.filter(p => p.status === 'active')
-   ```
+   ```text
 
-3. **Middleware for Logging**: Implement logging middleware during development:
+
+
+1. **Middleware for Logging**: Implement logging middleware during development:
+
    ```typescript
    // src/lib/store/middleware/logger.ts
    import { StateCreator, StoreApi, StoreMutatorIdentifier } from 'zustand'
@@ -331,9 +333,8 @@ export const ProjectList = () => {
    }
 
    export const logger = loggerImpl as unknown as Logger
-   ```
 
-### Data Persistence
+### Data Persistencesistence
 
 Implement data persistence for important state:
 
@@ -358,7 +359,7 @@ export const useStore = create<StoreState>()(
         getItem: (name) => {
           const str = localStorage.getItem(name)
           if (!str) return null
-          
+
           try {
             return JSON.parse(str)
           } catch (e) {
@@ -373,12 +374,8 @@ export const useStore = create<StoreState>()(
           localStorage.removeItem(name)
         },
       },
-    }
-  )
-)
-```
-
-### Type Safety
+  
+### Type Safetype Safety Safetyfety
 
 Ensure type safety across the state management system:
 
@@ -401,10 +398,8 @@ export interface Document {
   projectId: string
   createdAt: string
   updatedAt: string
-}
-```
 
-## Integration Examples
+## Integration Examplesn Examples
 
 ### 1. Theme Management
 
@@ -437,14 +432,14 @@ export const createUISlice: StateCreator<
     sidebarOpen: true,
   },
   actions: {
-    setTheme: (theme) => set((state) => ({ 
-      ui: { ...state.ui, theme } 
+    setTheme: (theme) => set((state) => ({
+      ui: { ...state.ui, theme }
     })),
-    toggleSidebar: () => set((state) => ({ 
-      ui: { ...state.ui, sidebarOpen: !state.ui.sidebarOpen } 
+    toggleSidebar: () => set((state) => ({
+      ui: { ...state.ui, sidebarOpen: !state.ui.sidebarOpen }
     })),
-    setSidebarOpen: (open) => set((state) => ({ 
-      ui: { ...state.ui, sidebarOpen: open } 
+    setSidebarOpen: (open) => set((state) => ({
+      ui: { ...state.ui, sidebarOpen: open }
     })),
   },
 })
@@ -456,28 +451,25 @@ import { useEffect } from 'react'
 export const useTheme = () => {
   const theme = useStore((state) => state.ui.theme)
   const setTheme = useStore((state) => state.actions.setTheme)
-  
+
   useEffect(() => {
     const root = window.document.documentElement
-    
+
     // Remove previous classes
     root.classList.remove('light', 'dark')
-    
+
     if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches 
-        ? 'dark' 
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
         : 'light'
       root.classList.add(systemTheme)
     } else {
       root.classList.add(theme)
     }
   }, [theme])
-  
-  return { theme, setTheme }
-}
-```
 
-### 2. Authentication State Management
+  return { theme,
+### 2. Authentication State Management Managementnagementement
 
 ```typescript
 // src/components/auth/LoginForm.tsx
@@ -493,24 +485,24 @@ export const LoginForm = () => {
   const { setUser, setLoading, setError } = useAuthState()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    
+
     try {
       const result = await signIn('credentials', {
         redirect: false,
         email,
         password,
       })
-      
+
       if (result?.error) {
         setError(result.error)
         return
       }
-      
+
       // Fetch user data after successful sign in
       const userResponse = await fetch('/api/user')
       if (userResponse.ok) {
@@ -527,16 +519,13 @@ export const LoginForm = () => {
       setLoading(false)
     }
   }
-  
+
   return (
     <form onSubmit={handleSubmit}>
       {/* Form fields */}
     </form>
-  )
-}
-```
 
-## Testing State Management
+## Testing State Managemente Management
 
 ### 1. Testing Zustand Store
 
@@ -566,13 +555,13 @@ describe('Auth Slice', () => {
   test('setUser updates user and authentication status', () => {
     const mockUser = { id: '1', email: 'test@example.com', name: 'Test User', role: 'user' }
     authSlice.actions.setUser(mockUser)
-    
+
     expect(mockSet).toHaveBeenCalledWith(expect.any(Function))
-    
+
     // Extract and call the function passed to mockSet
     const setStateFunction = mockSet.mock.calls[0][0]
     const newState = setStateFunction({ auth: authSlice.auth })
-    
+
     expect(newState).toEqual({
       auth: {
         ...authSlice.auth,
@@ -582,11 +571,8 @@ describe('Auth Slice', () => {
     })
   })
 
-  // More tests for other actions...
-})
-```
-
-### 2. Testing TanStack Query Hooks
+  // More tests for ot
+### 2. Testing TanStack Query Hooksk Query Hooksery Hooks Hooks
 
 ```typescript
 // src/api/hooks/__tests__/useProjects.test.ts
@@ -643,11 +629,9 @@ describe('useProjects', () => {
     expect(result.current.isLoading).toBe(false)
     expect(mockFetchProjects).not.toHaveBeenCalled()
     expect(result.current.data).toBeUndefined()
-  })
-})
-```
 
-## Implementation Checklist
+## Implementation Checklisttion Checklist
+
 
 - [ ] Set up Zustand core store structure
 - [ ] Create and implement store slices for each domain
@@ -663,4 +647,4 @@ describe('useProjects', () => {
 
 ## Conclusion
 
-This state management architecture provides a robust foundation for the SolnAI application, combining the strengths of Zustand for client-side state and TanStack Query for server state. By following this implementation guide, you'll establish a scalable, type-safe, and performant state management system that can grow with the application's needs. 
+This state management architecture provides a robust foundation for the SolnAI application, combining the strengths of Zustand for client-side state and TanStack Query for server state. By following this implementation guide, you'll establish a scalable, type-safe, and performant state management system that can grow with the application's needs.

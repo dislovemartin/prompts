@@ -8,18 +8,19 @@ This module defines the authentication implementation for the SolnAI application
 
 The authentication system follows these key principles:
 
+
 1. **Separation of Concerns**
    - Auth pages use Pages Router to prevent hydration issues
    - Main application uses App Router
    - Clear separation of client and server components
 
-2. **Security First**
+1. **Security First**
    - HTTPS for all auth requests
    - JWT with appropriate expiration
    - CSRF protection
    - Protected API routes
 
-3. **User Experience**
+1. **User Experience**
    - Seamless sign-in/sign-up flows
    - Social authentication options
    - Persistent sessions when appropriate
@@ -27,7 +28,7 @@ The authentication system follows these key principles:
 
 ## 📂 File Structure
 
-```
+```text
 src/
 ├── pages/                     # Pages Router (for auth only)
 │   ├── _app.tsx               # Custom App component with AuthProvider
@@ -52,7 +53,8 @@ src/
         ├── auth-options.ts    # NextAuth configuration
         ├── session.ts         # Session utilities
         └── supabase.ts        # Supabase client configuration
-```
+
+```text
 
 ## 🔧 NextAuth Configuration
 
@@ -86,17 +88,17 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) {
           return null
         }
-        
+
         // Authenticate with Supabase
         const { data, error } = await supabase.auth.signInWithPassword({
           email: credentials.email,
           password: credentials.password,
         })
-        
+
         if (error || !data.user) {
           return null
         }
-        
+
         return {
           id: data.user.id,
           email: data.user.email,
@@ -105,20 +107,20 @@ export const authOptions: NextAuthOptions = {
         }
       }
     }),
-    
+
     // GitHub authentication
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
     }),
-    
+
     // Google authentication
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
-  
+
   // Custom authentication pages
   pages: {
     signIn: '/auth/login',
@@ -126,32 +128,32 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error',
     verifyRequest: '/auth/verify-email',
   },
-  
+
   // JWT settings
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  
+
   // Callbacks for customizing authentication behavior
   callbacks: {
     async jwt({ token, user }) {
       // Include user ID and role in the JWT
       if (user) {
         token.id = user.id
-        
+
         // Fetch user role from Supabase
         const { data } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single()
-          
+
         token.role = data?.role || 'user'
       }
       return token
     },
-    
+
     async session({ session, token }) {
       // Make user ID and role available in the session
       if (session.user) {
@@ -161,14 +163,15 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  
+
   // Security and cookie settings
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
 }
-```
 
-## 🛡️ Middleware for Route Protection
+````text
+
+## 🛡️ Middleware for Route Protectionn
 
 Next.js middleware protects authenticated routes:
 
@@ -181,28 +184,28 @@ import type { NextRequest } from 'next/server'
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
   const isAuthenticated = !!token
-  
+
   // Path the user is trying to access
   const path = req.nextUrl.pathname
-  
+
   // Define public routes that don't require authentication
   const publicRoutes = ['/', '/auth/login', '/auth/register', '/auth/reset-password']
-  const isPublicRoute = publicRoutes.includes(path) || 
-                        path.startsWith('/api/auth/') || 
+  const isPublicRoute = publicRoutes.includes(path) ||
+                        path.startsWith('/api/auth/') ||
                         path.includes('.')  // Static files
-  
+
   // Redirect unauthenticated users to login
   if (!isAuthenticated && !isPublicRoute) {
     const url = new URL('/auth/login', req.url)
     url.searchParams.set('callbackUrl', path)
     return NextResponse.redirect(url)
   }
-  
+
   // Redirect authenticated users away from auth pages
   if (isAuthenticated && path.startsWith('/auth/')) {
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }
-  
+
   return NextResponse.next()
 }
 
@@ -212,10 +215,10 @@ export const config = {
     // Apply middleware to all routes except static files
     '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
-}
-```
 
-## 🔄 Authentication Components
+`````tex
+
+## 🔄 Authentication Componentstss
 
 ### Login Form Component
 
@@ -246,7 +249,7 @@ export function LoginForm() {
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  
+
   const {
     register,
     handleSubmit,
@@ -258,23 +261,23 @@ export function LoginForm() {
       password: '',
     },
   })
-  
+
   const onSubmit = async (data: LoginValues) => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       const result = await signIn('credentials', {
         redirect: false,
         email: data.email,
         password: data.password,
       })
-      
+
       if (result?.error) {
         setError('Invalid email or password')
         return
       }
-      
+
       router.push(callbackUrl)
     } catch (error) {
       setError('An unexpected error occurred')
@@ -282,7 +285,7 @@ export function LoginForm() {
       setIsLoading(false)
     }
   }
-  
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
@@ -290,21 +293,21 @@ export function LoginForm() {
           {error}
         </div>
       )}
-      
+
       <Input
         label="Email"
         type="email"
         {...register('email')}
         error={errors.email?.message}
       />
-      
+
       <Input
         label="Password"
         type="password"
         {...register('password')}
         error={errors.password?.message}
       />
-      
+
       <div className="flex items-center justify-between">
         <a
           href="/auth/reset-password"
@@ -313,7 +316,7 @@ export function LoginForm() {
           Forgot password?
         </a>
       </div>
-      
+
       <Button
         type="submit"
         variant="primary"
@@ -322,7 +325,7 @@ export function LoginForm() {
       >
         Sign In
       </Button>
-      
+
       <div className="mt-6">
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -334,7 +337,7 @@ export function LoginForm() {
             </span>
           </div>
         </div>
-        
+
         <div className="mt-6 grid grid-cols-2 gap-3">
           <Button
             type="button"
@@ -352,7 +355,7 @@ export function LoginForm() {
           </Button>
         </div>
       </div>
-      
+
       <div className="text-center mt-6">
         <p className="text-sm text-gray-600">
           Don't have an account?{' '}
@@ -366,10 +369,9 @@ export function LoginForm() {
       </div>
     </form>
   )
-}
-```
 
-### Auth Pages Implementation
+```````t
+### Auth Pages Implementationiononn
 
 ```tsx
 // src/pages/auth/login.tsx
@@ -395,7 +397,7 @@ export default function LoginPage() {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getServerSession(context.req, context.res, authOptions)
-  
+
   if (session) {
     return {
       redirect: {
@@ -404,14 +406,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     }
   }
-  
+
   return {
     props: {},
-  }
-}
-```
 
-## 🔄 Session Management
+```text
+`
+## 🔄 Session Managementmententnt
 
 ### Client-Side Session Access
 
@@ -423,15 +424,15 @@ import { useSession } from 'next-auth/react'
 
 export function ProfileButton() {
   const { data: session, status } = useSession()
-  
+
   if (status === 'loading') {
     return <div>Loading...</div>
   }
-  
+
   if (!session) {
     return <button>Sign In</button>
   }
-  
+
   return (
     <div className="flex items-center gap-2">
       {session.user.image && (
@@ -443,11 +444,9 @@ export function ProfileButton() {
       )}
       <span>{session.user.name}</span>
     </div>
-  )
-}
-```
 
-### Server-Side Session Access
+```}
+### Server-Side Session Accessccesscessess
 
 ```tsx
 // Example of server component with session access
@@ -457,11 +456,11 @@ import { redirect } from 'next/navigation'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
-  
+
   if (!session) {
     redirect('/auth/login')
   }
-  
+
   return (
     <div>
       <h1>Dashboard</h1>
@@ -469,47 +468,47 @@ export default async function DashboardPage() {
       {/* Dashboard content */}
     </div>
   )
-}
-```
 
-## 🔒 Security Best Practices
+## 🔒 Security Best Practicescticestices
+
 
 1. **Environment Variables**
    - Store all secrets in environment variables
    - Use .env.local for local development
    - Configure proper environment variables in deployment environment
 
-   ```
+   ```text
    # .env.example
    NEXTAUTH_URL=http://localhost:3000
    NEXTAUTH_SECRET=your-secret-key-at-least-32-chars
-   
+
    # Supabase
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
    SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-   
+
    # OAuth Providers
    GITHUB_CLIENT_ID=your-github-client-id
    GITHUB_CLIENT_SECRET=your-github-client-secret
    GOOGLE_CLIENT_ID=your-google-client-id
    GOOGLE_CLIENT_SECRET=your-google-client-secret
-   ```
+   ```text
 
-2. **CSRF Protection**
+
+1. **CSRF Protection**
    - NextAuth.js includes CSRF protection by default
    - Ensure secure cookie settings in production
 
-3. **Input Validation**
+1. **Input Validation**
    - Validate all user inputs with Zod
    - Sanitize data before processing
 
-4. **Password Security**
+2. **Password Security**
    - Leverage Supabase's secure password hashing
    - Implement password strength requirements
    - Support secure password reset flows
 
-5. **Session Expiry**
+1. **Session Expiry**
    - Set appropriate session timeouts
    - Implement refresh token rotation
    - Allow users to manage active sessions
@@ -520,11 +519,11 @@ export default async function DashboardPage() {
    - Test form validation logic
    - Test UI components with mocked authentication state
 
-2. **Integration Tests**
+1. **Integration Tests**
    - Test authentication flows
    - Test protected route redirects
 
-3. **End-to-End Tests**
+2. **End-to-End Tests**
    - Test complete sign-in flow with Playwright
    - Test sign-up and email verification
 
@@ -544,4 +543,4 @@ export default async function DashboardPage() {
 
 ---
 
-This authentication module provides a comprehensive framework for implementing secure, user-friendly authentication in the SolnAI application. Follow these guidelines to ensure a robust authentication system. 
+This authentication module provides a comprehensive framework for implementing secure, user-friendly authentication in the SolnAI application. Follow these guidelines to ensure a robust authentication system.

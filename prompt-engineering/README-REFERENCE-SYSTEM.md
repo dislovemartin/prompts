@@ -6,6 +6,7 @@ The SolnAI Prompt Engineering Reference System provides a modular approach to cr
 
 ## 🔍 Key Features
 
+
 - **Central Definitions Repository**: All core components defined in a single location
 - **Reference Syntax**: Simple syntax for referencing components across guides
 - **Automatic Resolution**: Tools for expanding references into full content
@@ -20,6 +21,7 @@ Core definitions are stored in `prompt-engineering/core/definitions.md` using th
 
 ```markdown
 <!-- SOLNAI:COMPONENT-NAME -->
+
 # Component Title
 
 Component content goes here.
@@ -31,16 +33,19 @@ code blocks, etc.
 function example() {
   return "Hello, world!";
 }
-```
-<!-- /SOLNAI:COMPONENT-NAME -->
-```
 
-### 2. Reference Components
+```text
+<!-- /SOLNAI:COMPONENT-NAME -->
+
+````text
+
+### 2. Reference Componentss
 
 When creating implementation guides, reference components using this syntax:
 
-```markdown
-# Implementation Guide
+```markdow
+
+# Implementation Guidedee
 
 ## Technology Stack
 
@@ -48,21 +53,22 @@ Reference: [SOLNAI:TECH-STACK]
 
 ## Other Section
 
-Regular content continues here...
-```
+Regular content continues here..
 
-### 3. Resolve References
+``````t
+### 3. Resolve Referencescesess
 
 Use the reference resolver tool to generate complete guides:
 
-```bash
+`
 # Install dependencies first
-npm install -g glob
-
-# Run the resolver
-node prompt-engineering/tools/reference-resolver.js "prompt-engineering/implementation/*.md"
-```
-
+st
+rst
+irst
+npm install -g # Run the resolver
+solver
+node prompt-engineering/tools/reference-resolver.js "prompt-engineering/implementation/*.
+`````````text
 This will create new files with `-resolved` suffix that contain the fully expanded content.
 
 ## 📝 Available Components
@@ -80,44 +86,48 @@ This will create new files with `-resolved` suffix that contain the fully expand
 
 To add a new component to the definitions file:
 
+
 1. Decide on a clear, descriptive key in UPPER-KEBAB-CASE
-2. Add your component to `definitions.md` using the standardized format
-3. Include all necessary details, code snippets, and explanations
-4. Document the new component in this README
+1. Add your component to `definitions.md` using the standardized format
+2. Include all necessary details, code snippets, and explanations
+3. Document the new component in this README
 
 ## 🔄 Updating Existing Components
 
 When updating an existing component:
 
+
 1. Modify the component content in `definitions.md`
-2. Update the version metadata if applicable
-3. Regenerate any affected implementation guides
-4. Document significant changes
+1. Update the version metadata if applicable
+2. Regenerate any affected implementation guides
+3. Document significant changes
 
 ## 🔍 Best Practices
 
 1. **Atomic Components**: Keep components focused on a single concern
-2. **Complete Context**: Ensure components provide all necessary context
-3. **Consistent Formatting**: Maintain consistent Markdown formatting
-4. **Clear References**: Use descriptive reference keys
-5. **Appropriate Granularity**: Don't make components too large or too small
+1. **Complete Context**: Ensure components provide all necessary context
+2. **Consistent Formatting**: Maintain consistent Markdown formatting
+3. **Clear References**: Use descriptive reference keys
+4. **Appropriate Granularity**: Don't make components too large or too small
 
 ## 📊 Benefits of this Approach
 
+
 1. **Consistency**: Ensures consistent implementation across different guides
-2. **Maintainability**: Update components in one place, reflected everywhere
-3. **Clarity**: Clear separation between core components and implementation guides
-4. **Modularity**: Compose complex guides from simpler, reusable components
-5. **Versioning**: Track changes to components over time
+1. **Maintainability**: Update components in one place, reflected everywhere
+2. **Clarity**: Clear separation between core components and implementation guides
+3. **Modularity**: Compose complex guides from simpler, reusable components
+4. **Versioning**: Track changes to components over time
 
 ## 🛠️ Troubleshooting
 
 If references aren't resolving correctly:
 
+
 1. Check that the reference key exactly matches the definition key
-2. Verify that the reference syntax is correct: `[SOLNAI:KEY-NAME]`
-3. Ensure the definitions file is properly formatted with correct opening and closing tags
-4. Check for any error messages from the reference resolver script
+1. Verify that the reference syntax is correct: `[SOLNAI:KEY-NAME]`
+2. Ensure the definitions file is properly formatted with correct opening and closing tags
+3. Check for any error messages from the reference resolver script
 
 ---
 

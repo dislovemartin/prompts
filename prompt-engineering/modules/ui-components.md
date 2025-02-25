@@ -8,7 +8,7 @@ This module defines the implementation guidelines for SolnAI UI components. Thes
 
 UI components are organized in the `/src/components/ui/` directory and follow a consistent pattern:
 
-```
+```text
 src/components/ui/
 ├── Button.tsx               # Primary button component
 ├── Card.tsx                 # Card container component
@@ -21,23 +21,25 @@ src/components/ui/
 ├── Toggle.tsx               # Toggle switch component
 ├── Toast.tsx                # Toast notification component
 └── Tooltip.tsx              # Tooltip component
-```
+
+```text
 
 ## 🖌️ Design System Integration
 
 All UI components should adhere to the SolnAI design system and utilize Tailwind CSS for styling. Components should support:
+
 
 1. **Theme Integration**
    - Light and dark mode variants
    - Consistent color palette usage
    - Design token-based styling
 
-2. **Responsive Design**
+1. **Responsive Design**
    - Mobile-first approach
    - Proper scaling across breakpoints
    - Touch-friendly target sizes
 
-3. **Accessibility**
+1. **Accessibility**
    - ARIA attributes where appropriate
    - Keyboard navigation support
    - Focus management
@@ -63,14 +65,14 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 // Implement the component with appropriate defaults
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ 
-    className, 
-    variant = 'default', 
-    size = 'md', 
-    isLoading = false, 
+  ({
+    className,
+    variant = 'default',
+    size = 'md',
+    isLoading = false,
     icon,
-    children, 
-    ...props 
+    children,
+    ...props
   }, ref) => {
     // Define variant classes using utility function
     const variantClasses = {
@@ -80,14 +82,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       ghost: 'bg-transparent hover:bg-gray-100 text-gray-800',
       link: 'bg-transparent underline text-blue-600 hover:text-blue-800'
     }
-    
+
     // Define size classes
     const sizeClasses = {
       sm: 'text-sm px-2 py-1',
       md: 'text-base px-4 py-2',
       lg: 'text-lg px-6 py-3'
     }
-    
+
     return (
       <button
         className={cn(
@@ -114,15 +116,18 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
 // Set displayName for better debugging
 Button.displayName = 'Button'
-```
 
-## 📋 Required UI Components
+````text
+
+## 📋 Required UI Componentss
 
 ### 1. Button Component
 
 **Purpose**: Primary interaction element for user actions.
 
 **Variants**:
+
+
 - `default`: Standard button
 - `primary`: Primary action button
 - `secondary`: Secondary action button
@@ -147,6 +152,8 @@ Button.displayName = 'Button'
 **Purpose**: Container for grouping related content.
 
 **Variants**:
+
+
 - `default`: Standard card
 - `interactive`: Card with hover/focus states
 - `bordered`: Card with visible border
@@ -165,6 +172,8 @@ Button.displayName = 'Button'
 **Purpose**: Text input field for user data entry.
 
 **Variants**:
+
+
 - `default`: Standard input
 - `filled`: Input with background fill
 - `outlined`: Input with visible outline
@@ -187,6 +196,8 @@ Button.displayName = 'Button'
 **Purpose**: Modal dialogs for focused interactions.
 
 **Properties**:
+
+
 - `title`: Dialog title
 - `description`: Optional description
 - `isOpen`: Control dialog visibility
@@ -204,6 +215,8 @@ Button.displayName = 'Button'
 **Purpose**: Menu for providing multiple options in a compact space.
 
 **Properties**:
+
+
 - `trigger`: Element that opens the dropdown
 - `items`: Array of menu items
 - `align`: Alignment relative to trigger
@@ -237,10 +250,11 @@ import { PlusIcon } from 'lucide-react'
 <Button disabled>Unavailable</Button>
 
 // Link variant
-<Button variant="link">Learn More</Button>
-```
+<Button variant="link">Learn More</Button
 
-### Card Component Example
+``````tex
+
+### Card Component Examplelee
 
 ```tsx
 import { Card } from '@/components/ui/Card'
@@ -253,10 +267,9 @@ import { Card } from '@/components/ui/Card'
 <Card variant="interactive" onClick={() => console.log('Card clicked')}>
   <h3 className="text-lg font-semibold">Interactive Card</h3>
   <p className="mt-2 text-gray-600">Click this card to trigger an action.</p>
-</Card>
-```
-
-### Input Component Example
+</Ca
+`````````t
+### Input Component Exampleplelee
 
 ```tsx
 import { Input } from '@/components/ui/Input'
@@ -265,35 +278,35 @@ import { Input } from '@/components/ui/Input'
 <Input label="Username" placeholder="Enter your username" />
 
 // With error state
-<Input 
-  label="Email" 
+<Input
+  label="Email"
   placeholder="Enter your email"
-  error="Please enter a valid email address" 
+  error="Please enter a valid email address"
 />
 
 // With helper text
-<Input 
-  label="Password" 
+<Input
+  label="Password"
   type="password"
-  helperText="Password must be at least 8 characters" 
-/>
-```
-
-## 🔄 Component Testing Guidelines
+  helperText="Password must be at least 8 characte
+````````text
+`
+## 🔄 Component Testing Guidelinesinesneses
 
 Each UI component should include comprehensive tests:
+
 
 1. **Rendering Tests**
    - Component renders without errors
    - All variants render correctly
    - Responsive behavior works as expected
 
-2. **Interaction Tests**
+1. **Interaction Tests**
    - Click handlers work correctly
    - Hover/focus states function properly
    - Loading states display correctly
 
-3. **Accessibility Tests**
+1. **Accessibility Tests**
    - Screen reader compatibility
    - Keyboard navigation
    - Sufficient color contrast
@@ -302,19 +315,20 @@ Each UI component should include comprehensive tests:
 
 UI components should meet these quality standards:
 
+
 1. **Code Quality**
    - TypeScript types for all props
    - JSDoc comments for public methods
    - Consistent naming conventions
    - No unnecessary re-renders
 
-2. **Visual Consistency**
+1. **Visual Consistency**
    - Matches design specifications
    - Consistent spacing and sizing
    - Proper responsive behavior
    - Theme compatibility
 
-3. **Performance**
+1. **Performance**
    - Minimal bundle size
    - Efficient rendering
    - No layout shifts during interactions
@@ -322,4 +336,4 @@ UI components should meet these quality standards:
 
 ---
 
-This module serves as the definitive guide for implementing UI components in the SolnAI application. All components should follow these guidelines to ensure consistency, accessibility, and maintainability. 
+This module serves as the definitive guide for implementing UI components in the SolnAI application. All components should follow these guidelines to ensure consistency, accessibility, and maintainability.

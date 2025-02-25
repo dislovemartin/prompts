@@ -11,32 +11,35 @@ This guide provides detailed instructions for implementing the initial setup of 
 Begin by creating a new Next.js project with the recommended configuration:
 
 ```bash
+
 # Create a new Next.js project with the specified options
-npx create-next-app@latest solnai-app --typescript --tailwind --eslint --app --use-npm --src-dir --import-alias "@/*"
 
-# Navigate to the project directory
+npx create-next-app@latest solnai-app --typescript --tailwind --eslint --app --use-npm --src-dir --import-alias "@/*"# Navigate to the project directory
+ry
 cd solnai-app
-```
 
-### Step 2: Install Required Dependencies
+```te
+
+### Step 2: Install Required Dependenciesies
 
 Install the necessary dependencies for the project:
 
-```bash
+```b
+
 # Install UI and animation libraries
+
+s
+ries
 npm install lucide-react framer-motion
 npm install @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-tabs @radix-ui/react-avatar
-npm install tailwindcss-animate class-variance-authority clsx tailwind-merge
-
-# Install state management and data fetching
+npm install tailwindcss-animate class-variance-authority clsx tailwind-m# Install state management and data fetching
+tching
 npm install zustand @tanstack/react-query zod
-npm install @trpc/client @trpc/server @trpc/react-query
-
-# Install authentication
+npm install @trpc/client @trpc/server @trpc/react-# Install authentication
+ication
 npm install next-auth@beta @supabase/supabase-js
-```
 
-### Step 3: Setup Project Configuration
+### Step 3: Setup Project Configurationguration
 
 #### Update TypeScript Configuration (tsconfig.json)
 
@@ -68,11 +71,8 @@ Ensure your TypeScript configuration includes proper settings for Next.js 14:
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
-}
-```
-
-#### Configure Tailwind CSS (tailwind.config.js)
+  "exclude": ["node_modules"
+#### Configure Tailwind CSS (tailwind.config.js)onfig.js)js)s)
 
 Set up Tailwind with the recommended configuration:
 
@@ -151,10 +151,8 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
-```
 
-#### Update Next.js Configuration (next.config.js)
+#### Update Next.js Configuration (next.config.js)config.js)
 
 ```javascript
 /** @type {import('next').NextConfig} */
@@ -168,10 +166,8 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
-```
-
-### Step 4: Create Global CSS Variables
+module.exports = nex
+### Step 4: Create Global CSS VariablesS Variablesblesles
 
 Update the `src/app/globals.css` file:
 
@@ -228,16 +224,17 @@ Update the `src/app/globals.css` file:
 }
 
 @layer base {
+
+
+
   * {
+
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
-  }
-}
-```
 
-### Step 5: Create Utility Functions
+### Step 5: Create Utility Functionsty Functions
 
 Create a utilities file for common functions:
 
@@ -247,15 +244,22 @@ import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
 /**
+
+
  * Combines multiple class values into a single className string
  * Uses clsx for conditional classes and twMerge for Tailwind class conflicts
+
  */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 /**
+
+
+
  * Formats a date into a readable string
+
  */
 export function formatDate(date: Date | string) {
   const d = new Date(date)
@@ -267,14 +271,15 @@ export function formatDate(date: Date | string) {
 }
 
 /**
+
+
+
  * Creates a delay for async operations
+
  */
 export function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-```
-
-### Step 6: Create Basic UI Components
+  return new Promise(resolve => setTimeout(reso
+### Step 6: Create Basic UI ComponentsUI Componentsnentsents
 
 Let's create the base UI components following the component structure.
 
@@ -357,10 +362,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 Button.displayName = "Button"
 
-export { Button, buttonVariants }
-```
-
-#### Card Component
+export { Button, bu
+#### Card ComponentCard Componentponentonent
 
 ```tsx
 // src/components/ui/Card.tsx
@@ -441,10 +444,8 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
-```
-
-#### Input Component
+export { Card, CardHeader, CardFooter, CardTitle, CardDescripti
+#### Input ComponentInput Componentmponentponent
 
 ```tsx
 // src/components/ui/Input.tsx
@@ -461,7 +462,7 @@ export interface InputProps
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, label, error, helperText, ...props }, ref) => {
     const id = React.useId()
-    
+
     return (
       <div className="space-y-2">
         {label && (
@@ -493,14 +494,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     )
   }
 )
-Input.displayName = "Input"
+Input.displayName = "Inp
+### Step 7: Create Layout Componentsayout Componentsmponentsponents
 
-export { Input }
-```
-
-### Step 7: Create Layout Components
-
-#### Header Component 
+#### Header Component
 
 ```tsx
 // src/components/layout/Header.tsx
@@ -510,16 +507,16 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Settings, 
-  LogOut 
+import {
+  LayoutDashboard,
+  FileText,
+  Settings,
+  LogOut
 } from 'lucide-react'
 
 export function Header() {
   const pathname = usePathname()
-  
+
   const navItems = [
     {
       name: 'Dashboard',
@@ -537,7 +534,7 @@ export function Header() {
       icon: Settings,
     },
   ]
-  
+
   return (
     <header className="sticky top-0 z-10 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -546,7 +543,7 @@ export function Header() {
             <span className="font-bold text-xl">SolnAI</span>
           </Link>
         </div>
-        
+
         <nav className="hidden md:flex flex-1 items-center space-x-6">
           {navItems.map((item) => (
             <Link
@@ -562,7 +559,7 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        
+
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="sm">
             <LogOut className="mr-2 h-4 w-4" />
@@ -570,12 +567,8 @@ export function Header() {
           </Button>
         </div>
       </div>
-    </header>
-  )
-}
-```
 
-#### Sidebar Component
+#### Sidebar ComponentSidebar ComponentComponent
 
 ```tsx
 // src/components/layout/Sidebar.tsx
@@ -584,18 +577,18 @@ export function Header() {
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Settings, 
-  Users, 
+import {
+  LayoutDashboard,
+  FileText,
+  Settings,
+  Users,
   BarChart,
   HelpCircle
 } from 'lucide-react'
 
 export function Sidebar() {
   const pathname = usePathname()
-  
+
   const navItems = [
     {
       name: 'Dashboard',
@@ -628,7 +621,7 @@ export function Sidebar() {
       icon: HelpCircle,
     },
   ]
-  
+
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-64 border-r bg-background lg:block">
       <div className="flex h-full flex-col">
@@ -665,12 +658,8 @@ export function Sidebar() {
           </div>
         </div>
       </div>
-    </aside>
-  )
-}
-```
 
-### Step 8: Create Root Layout
+### Step 8: Create Root LayoutCreate Root Layoutoot Layout
 
 ```tsx
 // src/app/layout.tsx
@@ -694,13 +683,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         {children}
-      </body>
-    </html>
-  )
-}
-```
-
-### Step 9: Create Landing Page
+    
+### Step 9: Create Landing PageCreate Landing Pageanding Pageing Page
 
 ```tsx
 // src/app/page.tsx
@@ -734,7 +718,7 @@ export default function Home() {
           </nav>
         </div>
       </header>
-      
+
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
@@ -763,7 +747,7 @@ export default function Home() {
             </div>
           </div>
         </section>
-        
+
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
@@ -802,7 +786,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      
+
       <footer className="w-full border-t py-6">
         <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
           <p className="text-center text-sm text-muted-foreground md:text-left">
@@ -820,31 +804,27 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      </footer>
-    </div>
-  )
-}
-```
-
-## 🧪 Verification Steps
+  
+## 🧪 Verification Steps� Verification Stepscation Stepsion Steps
 
 After implementing the project setup, verify your implementation with these checks:
+
 
 1. **Project Structure**
    - Confirm the directory structure matches the specifications
    - Verify all necessary files are created
 
-2. **Development Server**
+1. **Development Server**
    - Start the development server with `npm run dev`
    - Verify the application runs without errors
    - Access the application at http://localhost:3000
 
-3. **Component Functionality**
+1. **Component Functionality**
    - Check that UI components render correctly
    - Verify responsive behavior across different screen sizes
    - Test interactive elements like buttons
 
-4. **Code Quality**
+1. **Code Quality**
    - Run linting with `npm run lint`
    - Address any TypeScript errors
    - Ensure code follows style guidelines
@@ -868,4 +848,4 @@ After completing the project setup, proceed to the next implementation guide for
 
 ---
 
-This concludes the Project Setup Implementation Guide for SolnAI. Upon completion of these steps, you will have a solid foundation for the application with the necessary directory structure, base components, and configuration. 
+This concludes the Project Setup Implementation Guide for SolnAI. Upon completion of these steps, you will have a solid foundation for the application with the necessary directory structure, base components, and configuration.

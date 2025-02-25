@@ -4,7 +4,7 @@
 
 The SolnAI Next.js application follows a well-organized directory structure that separates concerns and promotes maintainability:
 
-```
+```text
 solnai-app/
 ├── .github/                # GitHub workflows and configuration
 ├── .husky/                 # Git hooks for code quality
@@ -25,7 +25,8 @@ solnai-app/
 ├── README.md               # Project documentation
 ├── tailwind.config.js      # Tailwind CSS configuration
 └── tsconfig.json           # TypeScript configuration
-```
+
+```text
 
 ## 📁 Detailed Directory Structure
 
@@ -33,7 +34,7 @@ solnai-app/
 
 The App Router directory organizes routes and their related components:
 
-```
+```text
 src/app/
 ├── (auth)/                  # Auth-related pages (grouped layout)
 │   ├── login/               # Login page route
@@ -64,13 +65,14 @@ src/app/
 ├── layout.tsx               # Root layout component
 ├── not-found.tsx            # 404 page component
 └── page.tsx                 # Landing page component
-```
 
-### Components Directory (`/src/components/`)
+````text
+
+### Components Directory (`/src/components/`))
 
 Components are organized by their purpose and scope:
 
-```
+```text
 src/components/
 ├── analytics/               # Analytics-related components
 │   ├── ActivityChart.tsx    # User activity visualization
@@ -103,14 +105,15 @@ src/components/
     ├── Dropdown.tsx         # Dropdown component
     ├── Input.tsx            # Input component
     ├── Tabs.tsx             # Tabs component
-    └── Toast.tsx            # Toast notification component
-```
+    └── Toast.tsx            # Toast notification componen
 
-### Library Directory (`/src/lib/`)
+``````tex
+
+### Library Directory (`/src/lib/`)`))
 
 Utility functions and service integrations:
 
-```
+```text
 src/lib/
 ├── api/                     # API client and utilities
 │   ├── client.ts            # API client configuration
@@ -141,14 +144,13 @@ src/lib/
 └── types/                   # TypeScript type definitions
     ├── auth.ts              # Authentication types
     ├── solution.ts          # Solution types
-    └── user.ts              # User types
-```
-
-### Pages Directory (`/src/pages/`)
+    └── user.ts              # User ty
+`````````t
+### Pages Directory (`/src/pages/`)/`)`))
 
 Pages Router for authentication (separated to prevent hydration issues):
 
-```
+```text
 src/pages/
 ├── _app.tsx                 # Custom App component
 ├── _document.tsx            # Custom Document component
@@ -157,14 +159,14 @@ src/pages/
 │   ├── register.tsx         # Registration page
 │   ├── reset-password.tsx   # Password reset page
 │   └── verify-email.tsx     # Email verification page
-└── api/                     # API routes (if needed)
-```
-
-### Public Directory (`/public/`)
+└── api/                     # API routes (if n
+````````text
+`
+### Public Directory (`/public/`)c/`)/`)`)
 
 Static assets accessible via the web:
 
-```
+```text
 public/
 ├── favicon.ico              # Website favicon
 ├── logo.svg                 # SolnAI logo
@@ -178,14 +180,16 @@ public/
 └── images/                  # Image assets
     ├── avatars/             # User avatar images
     ├── backgrounds/         # Background images
-    └── illustrations/       # Illustration assets
+    └── illustrations/       # Illustrati
+``````t
 ```
 
-### Tests Directory (`/tests/`)
+```s
+### Tests Directory (`/tests/`)ts/`)s/`)/`)
 
 Test files for the application:
 
-```
+```text
 tests/
 ├── components/              # Component tests
 │   ├── ui/                  # UI component tests
@@ -198,12 +202,11 @@ tests/
 │   └── db.test.ts           # Database integration tests
 └── unit/                    # Unit tests
     ├── utils.test.ts        # Utility function tests
-    └── validators.test.ts   # Validation logic tests
-```
-
-## 🔍 Key Structural Principles
+    └── validators.test.ts   # Validation logic t
+## 🔍 Key Structural Principlesciplesiplesples
 
 ### 1. Route Group Organization
+
 
 - **Route Groups** (in parentheses) share layouts without affecting URL paths
 - **Dynamic Routes** use brackets ([id]) for variable path segments
@@ -239,20 +242,20 @@ tests/
    - App Router (src/app/) for main application routes
    - Pages Router (src/pages/) only for auth to prevent hydration issues
 
-2. **Component Reusability**:
+1. **Component Reusability**:
    - UI components should be highly reusable and well-typed
    - Feature components can be more specialized
 
-3. **State Management Approach**:
+1. **State Management Approach**:
    - Zustand for global UI state
    - React Query for server state
    - React Context for localized state when appropriate
 
-4. **API Structure**:
+1. **API Structure**:
    - tRPC for type-safe API routes
    - Next.js API routes for simpler endpoints
 
-5. **CSS Organization**:
+2. **CSS Organization**:
    - Tailwind utility classes preferred
    - Component-specific styles when needed
    - Global styles minimized

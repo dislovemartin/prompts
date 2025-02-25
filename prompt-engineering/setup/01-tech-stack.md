@@ -64,6 +64,7 @@
 
 ## 🚨 Version Compatibility Requirements
 
+
 - Next.js 14+ requires Node.js 18.17.0 or later
 - shadcn/ui components require React 18 and Tailwind CSS 3.4+
 - TanStack Query 5+ requires React 18+
@@ -72,30 +73,28 @@
 ## 📦 Package Installation Commands
 
 ```bash
-# Install core dependencies
-pnpm add next@14.1.0 react@18.2.0 react-dom@18.2.0
 
-# Install UI libraries
+# Install core dependencies
+
+pnpm add next@14.1.0 react@18.2.0 react-dom@18.2.0# Install UI libraries
+es
 pnpm add tailwindcss@3.4.1 postcss@8.4.35 autoprefixer@10.4.16
 pnpm add lucide-react@0.299.0 framer-motion@11.0.0
-pnpm add @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-tabs
-
-# Install state management & data fetching
+pnpm add @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-tab# Install state management & data fetching
+ing
 pnpm add zustand@4.5.0 @tanstack/react-query@5.24.0
 pnpm add @trpc/client@10.45.0 @trpc/server@10.45.0 @trpc/react-query@10.45.0
-pnpm add zod@3.22.0
-
-# Install authentication & database
+pnpm add zod@3.22# Install authentication & database
+base
 pnpm add next-auth@5.0.0 @prisma/client@5.10.0
-pnpm add -D prisma@5.10.0
-
-# Install development tools
+pnpm add -D prisma@5.1# Install development tools
+tools
 pnpm add -D typescript@5.3.0 @types/react@18.2.48 @types/react-dom@18.2.18
 pnpm add -D eslint@8.57.0 prettier@3.2.0 husky@9.0.0
 pnpm add -D vitest@1.3.0 @playwright/test@1.42.0
-```
+``
 
-## 🔄 Configuration Files
+## 🔄 Configuration Files Files
 
 ### TypeScript Config (tsconfig.json)
 
@@ -127,9 +126,9 @@ pnpm add -D vitest@1.3.0 @playwright/test@1.42.0
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }
-```
+`
 
-### Tailwind Config (tailwind.config.js)
+### Tailwind Config (tailwind.config.js)fig.js))
 
 ```javascript
 /** @type {import('tailwindcss').Config} */
@@ -207,9 +206,9 @@ module.exports = {
   },
   plugins: [require("tailwindcss-animate")],
 }
-```
 
-## 📄 Browser Support Requirements
+## 📄 Browser Support Requirementsirements
+
 
 - Modern Chromium-based browsers (Chrome, Edge, etc.)
 - Firefox 95+
