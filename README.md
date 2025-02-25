@@ -4,6 +4,14 @@ This repository contains a comprehensive set of prompt engineering tools for imp
 
 ## 📁 Getting Started
 
+To begin implementation, follow these steps:
+
+1. Review the `prompt.md` file in the root directory
+2. This file contains the complete project initialization guide
+3. Follow the structured approach outlined in the guide to set up your SolnAI Next.js application
+
+The prompt.md file provides detailed instructions for setting up the directory structure, installing dependencies, and configuring essential components.
+
 The implementation guides are located in the `prompt-engineering` directory. Start by exploring:
 
 
