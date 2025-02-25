@@ -1,6 +1,24 @@
 {
+  "name": "prompt-engineering-toolkit",
+  "version": "1.0.0",
+  "description": "Advanced toolkit for prompt engineering, validation, and optimization",
+  "scripts": {
+    "validate": "node prompt-engineering/tools/prompt-validator.js",
+    "evaluate": "node prompt-engineering/tools/model-tuning.js evaluate-prompt",
+    "finetune": "node prompt-engineering/tools/model-tuning.js generate-dataset",
+    "optimize-backend": "node prompt-engineering/tools/backend-optimizer.js",
+    "check-links": "node check-links.js",
+    "lint-md": "markdownlint \"**/*.md\" --ignore node_modules"
+  },
   "devDependencies": {
     "markdown-link-check": "^3.13.6",
     "markdownlint-cli": "^0.44.0"
+  },
+  "dependencies": {
+    "glob": "^10.3.10",
+    "redis": "^4.6.13",
+    "express-rate-limit": "^7.1.5",
+    "crypto": "^1.0.1",
+    "aws-sdk": "^2.1556.0"
   }
 }
