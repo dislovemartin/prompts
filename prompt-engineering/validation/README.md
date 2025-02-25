@@ -90,7 +90,7 @@ node prompt-engineering/tools/prompt-validator.js "path/to/your-guide.md"
 
 ### 4. Review Validation Report
 
-Check the generated validation report in the `validation-reports` directory (or your specified output directory).
+Check the generated validation report in the `validation/reports` directory (or your specified output directory).
 
 ### 5. Improve Guide Based on Feedback
 
@@ -146,6 +146,18 @@ The validator assigns scores based on weighted criteria:
 - **50-74%**: Requires significant revision
 - **0-49%**: Rejected
 
+## 📊 System Improvements Summary
+
+The SUMMARY.md file in this directory provides an overview of recent improvements to the prompt engineering system, including:
+
+1. Enhanced modular reference system
+2. Comprehensive validation framework
+3. Expanded quality standards
+4. Improved implementation templates
+5. New development tools
+
+Refer to the [SUMMARY.md](SUMMARY.md) file for detailed information on these improvements.
+
 ## 🔄 Continuous Improvement
 
 The validation system itself should be continuously improved:
@@ -157,6 +169,6 @@ The validation system itself should be continuously improved:
 
 ## 📚 Additional Resources
 
-- [SOLNAI:PROMPT-VALIDATION]: Core prompt validation framework
-- `prompt-engineering/templates/`: Templates for implementation guides
-- `prompt-engineering/core/definitions.md`: Core definitions for reference 
+- [Core Definitions](../core/definitions.md): Core definitions for reference
+- [Development Rules](../rules/): Development guidelines and standards
+- [Templates](../templates/): Templates for implementation guides 

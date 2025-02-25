@@ -7,6 +7,7 @@ This directory contains development rules and guidelines for the SolnAI project.
 ## Available Rules
 
 - **development-guidelines.mdc**: Comprehensive development standards and workflows
+- **error-handling-standards.mdc**: Detailed patterns for effective error handling
 
 ## How to Use These Rules
 
@@ -18,13 +19,18 @@ This directory contains development rules and guidelines for the SolnAI project.
 
 ### For AI Assistants
 
-AI assistants can reference these rules using the `fetch_rules` tool. For example:
+AI assistants can reference these rules during the development process to ensure adherence to project standards and best practices.
 
-```
-fetch_rules(["development-guidelines"])
-```
+Key areas covered in these guidelines include:
 
-This will provide the AI assistant with the complete guidelines for reference during the development process.
+- Code organization and structure
+- Naming conventions
+- Component architecture
+- State management patterns
+- Error handling approaches
+- Performance optimization
+- Accessibility standards
+- Security best practices
 
 ## Rule Maintenance
 
@@ -34,6 +40,14 @@ These rules should be reviewed and updated regularly to reflect current best pra
 2. Include specific examples to illustrate guidelines
 3. Keep code examples up-to-date with the current tech stack
 4. Document any controversial decisions or trade-offs
+
+## Integration with Validation System
+
+The rules in this directory are integrated with the validation system:
+
+1. The prompt validator can check implementation guides against these rules
+2. Validation reports will highlight compliance with or divergence from these rules
+3. Rules can be referenced in core definitions to maintain consistency
 
 ## Contributing
 

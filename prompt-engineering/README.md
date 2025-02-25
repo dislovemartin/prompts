@@ -25,16 +25,20 @@ prompt-engineering/
 │   └── troubleshooting-guide.md # Troubleshooting and architecture guide
 ├── implementation/            # Sequential implementation guides
 │   ├── 01-project-setup.md    # Initial project setup
-│   ├── 02-routing-pages.md    # Routing and page structure
-│   └── 03-auth-flow.md        # Authentication flow implementation
+│   └── revised-project-setup.md # Updated project setup guide
 ├── templates/                 # Templates for new prompt components
 │   └── implementation-guide-template.md # Template for implementation guides
 ├── tools/                     # Utility scripts for prompt management
 │   ├── reference-resolver.js  # Script to expand references in guides
 │   └── prompt-validator.js    # Script to validate prompt quality
-└── validation/                # Validation resources and reports
-    ├── README.md              # Validation system documentation
-    └── reports/               # Generated validation reports
+├── validation/                # Validation resources and reports
+│   ├── README.md              # Validation system documentation
+│   ├── SUMMARY.md             # Summary of system improvements
+│   └── reports/               # Generated validation reports
+└── rules/                     # Development rules and guidelines
+    ├── README.md              # Rules system documentation
+    ├── development-guidelines.mdc # Comprehensive development standards
+    └── error-handling-standards.mdc # Error handling guidelines
 ```
 
 ## 🚀 How to Use This System
@@ -61,8 +65,17 @@ The modules directory contains reusable prompt components focused on specific fu
 - **Authentication**: Provides patterns for implementing secure user authentication.
 - **State Management**: Offers strategies for managing application state.
 - **API Integration**: Details approaches for connecting to backend services.
+- **Accessibility Guide**: Ensures implementation follows accessibility best practices.
+- **Troubleshooting Guide**: Provides solutions for common implementation issues.
 
-### 4. Follow the Implementation Sequence
+### 4. Follow Development Rules
+
+The rules directory contains guidelines and standards for development:
+
+- **Development Guidelines**: Comprehensive standards for code quality and organization.
+- **Error Handling Standards**: Detailed patterns for effective error handling.
+
+### 5. Follow the Implementation Sequence
 
 The implementation guides provide step-by-step instructions for building the application:
 
@@ -70,7 +83,7 @@ The implementation guides provide step-by-step instructions for building the app
 2. **Routing and Pages**: Implement the application's page structure and navigation.
 3. **Authentication Flow**: Add user authentication and protected routes.
 
-### 5. Validate Your Prompts
+### 6. Validate Your Prompts
 
 Use the validation tools to ensure your prompts meet quality standards:
 
@@ -125,6 +138,7 @@ Evaluate prompt effectiveness based on:
 To add a new reusable component:
 
 1. Add the component to `core/definitions.md` using the format:
+
    ```markdown
    <!-- SOLNAI:COMPONENT-NAME -->
    # Component Title
@@ -134,6 +148,7 @@ To add a new reusable component:
    ```
 
 2. Reference the component in implementation guides:
+
    ```markdown
    Reference: [SOLNAI:COMPONENT-NAME]
    ```
@@ -154,7 +169,7 @@ Use the prompt validator to analyze quality:
 node tools/prompt-validator.js "implementation/*.md"
 ```
 
-### New Components Added
+### Available Components
 
 The system now includes additional components to provide more comprehensive guidance:
 
@@ -209,4 +224,4 @@ The system now includes additional components to provide more comprehensive guid
 
 ---
 
-This prompt engineering system provides a comprehensive framework for implementing the SolnAI Next.js application. By following these structured prompts and utilizing the validation tools, AI assistants can consistently produce high-quality implementations that meet project requirements. The modular reference system ensures consistency across guides while reducing redundancy and improving maintainability. 
+This prompt engineering system provides a comprehensive framework for implementing the SolnAI Next.js application. By following these structured prompts and utilizing the validation tools, AI assistants can consistently produce high-quality implementations that meet project requirements. The modular reference system ensures consistency across guides while reducing redundancy and improving maintainability.

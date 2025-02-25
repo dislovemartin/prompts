@@ -42,4 +42,4 @@ To suggest changes to these rules:
 1. Create a feature branch (`feature/update-guidelines`)
 2. Make your changes
 3. Submit a pull request with a clear description of the proposed changes
-4. Obtain approval from at least one senior team member 
+4. Obtain approval from at least one senior team member
